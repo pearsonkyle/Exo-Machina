@@ -58,13 +58,22 @@ class Database():
         
     @property
     def engine_string(self):
-        mystring = "{}://{}:{}@{}:{}/{}".format(
-                                    self.settings['dialect'],
-                                    self.settings['username'],
-                                    self.settings['password'],
-                                    self.settings['endpoint'],
-                                    self.settings['port'],
-                                    self.settings['dbname'] )
+        # local db
+        if self.settings['endpoint'] == '':
+            # will break windows
+            mystring = "{}:////{}.db".format(
+                self.settings['dialect'],
+                self.settings['dbname']
+            )
+        else:
+            # online db
+            mystring = "{}://{}:{}@{}:{}/{}".format(
+                                        self.settings['dialect'],
+                                        self.settings['username'],
+                                        self.settings['password'],
+                                        self.settings['endpoint'],
+                                        self.settings['port'],
+                                        self.settings['dbname'] )
         return mystring
 
     def _check_session(foo):
@@ -90,7 +99,7 @@ class Database():
             pass 
 
     def exists(self,key,val):
-        return self.session.query( exists().where(key==val) ).scalar()
+        return self.session.query(self.dtype).filter_by(key==val).scalar()
 
     def create_read_only_user(self,table):
         with self.engine.begin() as con:
@@ -109,27 +118,29 @@ class Database():
     def query(self,*args, count=10):
         return self.session.query(self.dtype).filter(*args).limit(count).all()
 
-
 ################### custom table
-class ARTest(Base, DatabaseObject):
-    __tablename__ = "ar_test"
+class ADSEntry(Base, DatabaseObject):
+    __tablename__ = "exoplanet"
 
     @staticmethod
     def keys():
-        return ['latitude','longitude','user','url','api']
+        return ['bibcode', 'title', 'citation_count', 'abstract', \
+        'pub', 'year', 'keyword']
 
     # define columns of table
-    timestamp = Column(DateTime, default=datetime.utcnow(), primary_key=True) # 'Jun 1 2005  1:33PM'
-    latitude = Column(Float)
-    longitude = Column(Float)
-    user = Column(String)
-    url = Column(String) 
-    api = Column(String) 
+    bibcode = Column(String, primary_key=True)
+    title = Column(String)
+    citation_count = Column(Integer)
+    abstract = Column(String)
+    pub = Column(String)
+    year = Column(Integer)
+    keyword = Column(String)
+
 ##############################
 
 if __name__ == "__main__":
     settings = json.load(open('settings.json', 'r'))
-    dbTEST = Database( settings=settings['database'], dtype=ARTest )
+    dbTEST = Database( settings=settings['database'], dtype=ADS_DB )
 
     #ARTest.__table__.create(dbTEST.engine)
     
