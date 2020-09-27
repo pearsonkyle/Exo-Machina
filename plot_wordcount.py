@@ -39,10 +39,11 @@ if __name__ == '__main__':
     ADSDatabase = Database( settings=settings[args.key], dtype=ADSEntry )
     
 
-    entrys = ADSDatabase.session.query(ADSEntry.title,ADSEntry.keyword,ADSEntry.year,ADSEntry.pub).all()
+    entrys = ADSDatabase.session.query(
+        ADSEntry.title,ADSEntry.keyword,ADSEntry.year,ADSEntry.pub,ADSEntry.abstract).all()
     allwords = []; years = []; publications =[]
     for entry in entrys:
-        title,keyword,year,pub = entry
+        title,keyword,year,pub,abstract = entry
 
         bad_words = [
             'galaxy','galaxies','dark matter',
@@ -50,11 +51,11 @@ if __name__ == '__main__':
             'cosmology','Black Hole', 'Cosmology',
             'Galaxy','Globular','globular','cluster',
             'Cluster','Quasar','Dark Energy', 'cosmological',
-            'lensing','Lensing','NGC','Herbig'
+            'NGC','Herbig','Galaxies','White Dwarf','white dwarf',
         ]
 
-        if title:
-            bmask = check_in(title,bad_words)
+        if title and abstract:
+            bmask = check_in(title,bad_words) | check_in(abstract,bad_words)
             if not bmask:
                 allwords.extend(title.split(' '))
                 years.append(year)
@@ -76,6 +77,7 @@ if __name__ == '__main__':
 
     allwords = remove_all(allwords,'First')
     
+
     # publication journal
     pubs,counts = np.unique(publications, return_counts=True)
     si = np.argsort(counts)[::-1]
@@ -83,6 +85,7 @@ if __name__ == '__main__':
         print(" {} - {}".format(counts[si[i]], pubs[si[i]]))
 
     # year of publication
+    print("N Articles:",len(years))
     # years = np.array(years)
     # plt.hist(years,bins=np.arange(min(years),max(years)+1))
     # plt.xlabel("Year")

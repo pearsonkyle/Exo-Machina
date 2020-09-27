@@ -36,11 +36,11 @@ if __name__ == '__main__':
             'cosmology','Black Hole', 'Cosmology',
             'Galaxy','Globular','globular','cluster',
             'Cluster','Quasar','Dark Energy', 'cosmological',
-            'NGC','Herbig','Galaxies'
+            'NGC','Herbig','Galaxies','White Dwarf','white dwarf',
         ]
 
         if title and abstract:
-            bmask = check_in(title,bad_words)
+            bmask = check_in(title,bad_words) | check_in(abstract,bad_words)
             if not bmask:
                 abstracts.append(abstract)
 

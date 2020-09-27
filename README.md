@@ -1,27 +1,37 @@
 # Exo-Machina
-A deep language model, GPT-2, is trained on scientific manuscripts from NASA's Astrophysical Data System pertaining to extrasolar planets and the references therein. The language model is trained in an unsupervised manner on the abstracts of each article. After training, the model is used to generate new sequences of text from scratch and from user input. 
+A deep language model, GPT-2, is trained on scientific manuscripts from NASA's Astrophysical Data System pertaining to extrasolar planets and the references therein. This pilot study uses the abstracts of each article as training data in order to explore correlations scientific literature from a language perspective. 
 
-
-Here is a collection of words from the titles of ~27000 exoplanet-related manuscripts:
+Here is a collection of words from the titles of ~20000 exoplanet-related manuscripts:
 
 ![](Figures/exoplanet_wordcloud.png)
 
-The abstracts of each article are used as training samples for the [GPT-2](https://openai.com/blog/better-language-models/) language model. Training is done in an unsupervised manner to learn correlations in scientific language that can later be used for generating text. A few generated samples are below: 
+
+A language model is a mathematical representation for an algorithm used to generate sequences in the same way a human would to form sentances. Each word or letter in a sentance is encoded to a numerical value (e.g. using word2vec) and is appended to a list forming sequences that represent up to a paragraph worth of text. The sequences are fed into the [GPT-2](https://openai.com/blog/better-language-models/) 355M model and trained for 10,000 steps with fine tuning. After training, the language model is used to generate new text from scratch and from user input. A few generated samples are below: 
 
 ```
-Prolonged photometric monitoring is essential for reliable statistics on the distribution of stars between the galaxy and galactic plane. The standard methods for measuring the mean distribution of stars in the Galaxy are: the stellar mean spectrum, high-resolution spectrographs, and the radial distribution distribution of stars. These methods are effective, but there are a variety of other methods that are feasible: spectra with a large signal-to-noise ratio, long-fiber-line photometry, or multiple-wavelength arrays. Here, we show for the first time a method for measuring the galaxy mean spectrum using the full high-resolution spectroscopy at a distance of 1 kpc from the Galactic plane. The method is based on a Bayesian approach, which incorporates the galaxy luminosity function, the mean stellar distance, and the galaxy colour distribution. This yields accurate galaxy abundances for a wide range of star-forming galaxies in the 3.8-13 kpc distance range. Using the technique we achieve stellar abundances close to those derived by spectropolarimetric methods. This is achieved by means of anisotropic selection of galactic haloes. 
+We present, as a starting point, a simplified approach to identifying exoplanets by measuring their chemical abundances using an empirical Bayesian framework for modeling planetary biosignature atmospheres. In addition, we present an empirical Bayesian model to predict the chemical compositions and chemical abundances for exoplanets from gas-driven stellar evolution models. Theoretical models used to construct this general model include the stellar evolution (e.g., solar-type evolution), stellar evolutions (e.g., chemical evolution, photometric evolution and stellar age), and chemical abundance variations (e.g., formation, transport and/or elimination rate of the organic aerosols from their atmospheres). The simulated atmospheres of an exoplanet of a certain physical type, for which we have simulated the chemistry and chemical composition by applying our model, are compared with observations made before the beginning of the Kepler period. We find that our chemical models match well with the observations in some planetary systems, and agree well with stellar evolution and stellar age models. A comparison of the chemical compositions and abundances found in our models with those seen in the solar system indicates that chemical evolution is a natural part of the mass-radius relation.
 ```
 
 ```
-Abundance of helium and/or hydrogen in the gas phase is expected to be the primary cause of the main flow of hydrogen in the turbulent envelope of a planetary system. However, the observational data present in the literature are not consistent with predictions of these predictions. To assess the impact of the orbital eccentricity and non-ideal conditions on the observed binary-planet system, we compare the orbital characteristics of the binary with the dynamical parameters of the host star. We find that the system is strongly influenced by the degree of eccentricity perturbations due to the non-ideal configuration, but as a result, it is not equally affected by the eccentricity perturbations. We conclude that the main flow of hydrogen is affected by the eccentricity perturbations and the orbital eccentricities of the pre-main sequence, but the non-ideal configuration and non-ideal conditions are also different.
+Context. Atmospheric chemistry and evolution of solar-type stars has been extensively studied from decades of space missions that have provided abundant observations for stellar parameters, the chemical abundances, and chemical abundances of abundances of organic species. For example, the first generation of the James Webb Space Telescope (JWST) instrument has provided data that may help to constrain and calibrate chemical abundance observations for stars in the habitable zone of the Milky Way. 
+Aims: We aim to use a large set of high-precision photometric information to confirm and refine the properties of the Earth-like exoplanet Kepler-5b using the best data obtained so far for this system. Methods: We have constructed a database of high-quality high-resolution spectra for seven nearby stars and studied the abundance differences between two samples selected from a set of Kepler parameter space maps. For high-precision measurements of the stars' abundance functions we have used a Bayesian procedure that utilizes Bayesian reasoning and Bayesian phylogenetics. 
+Results: We confirm the metallicity and abundance ratios of the Kepler-5b sample by analysing photometric variation in the Kepler-7/K1/K2 data. However, based on our new metallicity, the abundance ratios do not reflect stellar metallicity. Finally, based on the stars' abundance ratios, we find no evidence for high metallicity abundance variations in the sample chosen.
 ```
 
 The language model is also capable of generating sequences from user input: 
 ```json
 Input: The infrared atmospheres of transiting exoplanets
 Output:
-
 ```
+
+Explore more outputs here
+
+## Instructions
+
+python dependencies: sqlalchemy, ads, matplotlib, numpy, wordcloud
+
+The articles from ADS are stored in a SQL database on AWS in order to centralize and make the data open access
+
 ## Setup a SQL Databse to store training samples
 A postegres SQL database is set up on Amazon RDS in order to provide online access to the same data for multiple computers. Follow the instructions below to set up your own database using the Free Tier of services on AWS: 
 
@@ -64,21 +74,21 @@ optional arguments:
 
 Letting the scrape run for ~2 hours found articles from these publications in descending order:
 ```
- 7187 - The Astrophysical Journal
- 4102 - Astronomy and Astrophysics
- 3954 - Monthly Notices of the Royal Astronomical Society
- 1734 - The Astronomical Journal
- 822 - arXiv e-prints
- 524 - The Astrophysical Journal Supplement Series
- 519 - Icarus
- 470 - Publications of the Astronomical Society of the Pacific
- 356 - Physical Review D
- 311 - Nature
- 273 - Journal of Cosmology and Astroparticle Physics
- 214 - Science
- 193 - Journal of Geophysical Research
- 180 - Astronomische Nachrichten
- 143 - Journal of Quantitative Spectroscopy and Radiative Transfer
+ 5364 - The Astrophysical Journal
+ 3365 - Astronomy and Astrophysics
+ 2704 - Monthly Notices of the Royal Astronomical Society
+ 1355 - The Astronomical Journal
+ 617 - arXiv e-prints
+ 498 - Icarus
+ 388 - Publications of the Astronomical Society of the Pacific
+ 324 - The Astrophysical Journal Supplement Series
+ 245 - Nature
+ 187 - Journal of Geophysical Research
+ 167 - Science
+ 145 - Astronomische Nachrichten
+ 129 - Planetary and Space Science
+ 114 - Space Science Reviews
+ 109 - Geophysical Research Letters
 ```
 
 The number of manuscripts for each year: 
@@ -102,3 +112,10 @@ Browse results on our [website]()
 - supervised training on sentances with references
 - extract text from manuscript PDF
 - more training samples (currently 26569 abstracts)
+- twitter bot?
+
+## Other samples
+
+```
+A sample for the first study of transiting extrasolar planets is presented. In this study, the transits of both transits and non-transits of the primary companion were obtained for the two stars in order to test the existence of a period of time extending beyond the initial value of the transit time table that is required to be confirmed as transit data from future measurements. The results indicate that the two stars may have similar radii of about 0.5 R☉ while the secondary mass star can be identified as a massless mass. The data imply that there is a period of time, ≳20,000 days, that has elapsed between each transit that can be ascribed to the gravitational interactions of the two stars. This period appears to be consistent with the reported values for the orbital period of the two companion stars. This suggests that the properties of the orbits of both primary stars are similar.
+```
