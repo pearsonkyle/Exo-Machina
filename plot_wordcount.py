@@ -20,6 +20,17 @@ def parse_args():
 
     return parser.parse_args()
 
+def remove_all(x, element):
+    return list(filter(lambda a: element not in a, x))
+    #return list(filter((element).__ne__, a))
+
+def check_in(title,bad_words):
+    bmask = False
+    for bword in bad_words:
+        if bword in title:
+            bmask = True
+    return bmask
+
 if __name__ == '__main__':
 
     args = parse_args()
@@ -27,53 +38,59 @@ if __name__ == '__main__':
     settings = json.load(open(args.settings, 'r'))
     ADSDatabase = Database( settings=settings[args.key], dtype=ADSEntry )
     
-    years = ADSDatabase.session.query(ADSEntry.year).all()
-    years = np.array(years).T[0]
-    plt.hist(years,bins=np.arange(min(years),max(years)+1))
-    plt.xlabel("Year")
-    plt.grid(True,ls='--')
-    plt.tight_layout()
-    plt.xlim([np.mean(years)-3*np.std(years),max(years)])
-    plt.savefig("year_histogram.pdf")
-    plt.show()
 
-    # citation counts
-    # counts = ADSDatabase.session.query(ADSEntry.citation_count).all()
+    entrys = ADSDatabase.session.query(ADSEntry.title,ADSEntry.keyword,ADSEntry.year,ADSEntry.pub).all()
+    allwords = []; years = []; publications =[]
+    for entry in entrys:
+        title,keyword,year,pub = entry
 
-    publications = ADSDatabase.session.query(ADSEntry.pub).all()
+        bad_words = [
+            'galaxy','galaxies','dark matter',
+            'dark energy','quasar','black hole',
+            'cosmology','Black Hole', 'Cosmology',
+            'Galaxy','Globular','globular','cluster',
+            'Cluster','Quasar','Dark Energy', 'cosmological',
+            'lensing','Lensing','NGC','Herbig'
+        ]
+
+        if title:
+            bmask = check_in(title,bad_words)
+            if not bmask:
+                allwords.extend(title.split(' '))
+                years.append(year)
+                publications.append(pub)
+                pass
+
+    allwords = remove_all(allwords,'SUP')
+    allwords = remove_all(allwords,'using')
+    allwords = remove_all(allwords,'Using')
+
+    allwords = remove_all(allwords,'II')
+    allwords = remove_all(allwords,'III')
+    allwords = remove_all(allwords,'IV')
+
+    allwords = remove_all(allwords,'SUB')
+    allwords = remove_all(allwords,'New')
+    allwords = remove_all(allwords,'new')
+    allwords = remove_all(allwords,'first')
+
+    allwords = remove_all(allwords,'First')
+    
+    # publication journal
     pubs,counts = np.unique(publications, return_counts=True)
     si = np.argsort(counts)[::-1]
     for i in range(15):
         print(" {} - {}".format(counts[si[i]], pubs[si[i]]))
 
-    titles = ADSDatabase.session.query(ADSEntry.title).all()
-    allwords = []
-    for tit in titles:
-        if tit[0]:
-            if 'SUP' in tit[0] or 'SUB' in tit[0]:
-                continue
-            if 'galaxy' in tit[0].lower():
-                continue
-            if 'dark matter' in tit[0].lower():
-                continue
-            if 'dark energy' in tit[0].lower():
-                continue
-            allwords.extend(tit[0].split(' '))
-
-    keywords = ADSDatabase.session.query(ADSEntry.keyword).all()
-    for tit in titles:
-        if tit[0]:
-            if 'SUP' in tit[0] or 'SUB' in tit[0]:
-                continue
-            if 'galaxy' in tit[0].lower():
-                continue
-            if 'galaxies' in tit[0].lower():
-                continue
-            if 'dark matter' in tit[0].lower():
-                continue
-            if 'dark energy' in tit[0].lower():
-                continue
-            allwords.extend(tit[0].split(' '))
+    # year of publication
+    # years = np.array(years)
+    # plt.hist(years,bins=np.arange(min(years),max(years)+1))
+    # plt.xlabel("Year")
+    # plt.grid(True,ls='--')
+    # plt.tight_layout()
+    # plt.xlim([np.mean(years)-3*np.std(years),max(years)])
+    # plt.savefig("year_histogram.pdf")
+    # plt.show()
 
     # # Generate a word cloud image
     titlecloud = WordCloud(width=1600, height=800).generate(' '.join(allwords))
