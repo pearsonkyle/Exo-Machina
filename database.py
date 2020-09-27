@@ -59,21 +59,13 @@ class Database():
     @property
     def engine_string(self):
         # local db
-        if self.settings['endpoint'] == '':
-            # will break windows
-            mystring = "{}:////{}.db".format(
-                self.settings['dialect'],
-                self.settings['dbname']
-            )
-        else:
-            # online db
-            mystring = "{}://{}:{}@{}:{}/{}".format(
-                                        self.settings['dialect'],
-                                        self.settings['username'],
-                                        self.settings['password'],
-                                        self.settings['endpoint'],
-                                        self.settings['port'],
-                                        self.settings['dbname'] )
+        mystring = "{}://{}:{}@{}:{}/{}".format(
+            self.settings['dialect'],
+            self.settings['username'],
+            self.settings['password'],
+            self.settings['endpoint'],
+            self.settings['port'],
+            self.settings['dbname'] )
         return mystring
 
     def _check_session(foo):
@@ -99,7 +91,7 @@ class Database():
             pass 
 
     def exists(self,key,val):
-        return self.session.query(self.dtype).filter_by(key==val).scalar()
+        return self.session.query(self.dtype).filter(key==val).first()
 
     def create_read_only_user(self,table):
         with self.engine.begin() as con:
@@ -125,7 +117,7 @@ class ADSEntry(Base, DatabaseObject):
     @staticmethod
     def keys():
         return ['bibcode', 'title', 'citation_count', 'abstract', \
-        'pub', 'year', 'keyword']
+        'pub', 'year', 'keyword','text']
 
     # define columns of table
     bibcode = Column(String, primary_key=True)
@@ -135,7 +127,7 @@ class ADSEntry(Base, DatabaseObject):
     pub = Column(String)
     year = Column(Integer)
     keyword = Column(String)
-
+    text = Column(String)
 ##############################
 
 if __name__ == "__main__":
@@ -145,9 +137,7 @@ if __name__ == "__main__":
     #ARTest.__table__.create(dbTEST.engine)
     
     mostrecent = dbTEST.session.query(ARTest).order_by(ARTest.timestamp.desc()).first()
-
     print(mostrecent)
-
     results = dbTEST.query(ARTest.latitude<32,ARTest.longitude>-110, count=10)
     print(results)
 

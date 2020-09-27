@@ -1,28 +1,46 @@
 # Exo-Machina
 A deep language model is trained on scientific manuscripts from NASA's Astrophysical Data System pertaining to planets out side of our Solar System. Fine tuning is done in a supervised manner in order for the AI to recommend references.
 
-```python
-import ads
+![](Figures/exoplanet_keywords.png)
 
-papers = ads.SearchQuery(
-    q="transiting exoplanet", 
-    fl=['title', 'citation_count', 'abstract', 'bibtex', 
-        'pub', 'year', 'page', 'keyword','identifier'],
-    sort="citation_count",max_pages=4
-)
+A collection of keywords and titles from a ~20000 manucripts related to exoplanets
 
-for paper in papers:
-    print(paper.title, paper.citation_count)
+## Scraping NASA ADS
 
-query = ads.SearchQuery(identifier='2011arXiv1111.5621B')
+https://ads.readthedocs.io/en/latest/
 
-'''
-first_paper.
-first_paper.abstract              first_paper.build_citation_tree   first_paper.first_author_norm     first_paper.keys                  first_paper.pubdate
-first_paper.aff                   first_paper.build_reference_tree  first_paper.id                    first_paper.keyword               first_paper.read_count
-first_paper.author                first_paper.citation              first_paper.identifier            first_paper.metrics               first_paper.reference
-first_paper.bibcode               first_paper.citation_count        first_paper.issue                 first_paper.page                  first_paper.title
-first_paper.bibstem               first_paper.database              first_paper.items                 first_paper.property              first_paper.volume
-first_paper.bibtex                first_paper.first_author          first_paper.iteritems             first_paper.pub                   first_paper.year
-'''
 ```
+usage: ads_query.py [-h] [-q QUERY] [-s SETTINGS] [-k KEY]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -q QUERY, --query QUERY
+                        Initial search criteria
+  -s SETTINGS, --settings SETTINGS
+                        Settings file
+  -k KEY, --key KEY     Settings key
+```
+
+`python ads_query.py -s settings.json -q exoplanet`
+
+Top 15 Journals in scrape:
+```
+ 4761 - The Astrophysical Journal
+ 2868 - Astronomy and Astrophysics
+ 2412 - Monthly Notices of the Royal Astronomical Society
+ 1244 - The Astronomical Journal
+ 495 - arXiv e-prints
+ 364 - Icarus
+ 361 - Publications of the Astronomical Society of the Pacific
+ 302 - The Astrophysical Journal Supplement Series
+ 234 - Nature
+ 180 - Journal of Geophysical Research
+ 140 - Science
+ 133 - Journal of Quantitative Spectroscopy and Radiative Transfer
+ 124 - Astronomische Nachrichten
+ 116 - Astrobiology
+ 110 - Planetary and Space Science
+```
+
+Manuscript Count
+![](Figures/exoplanet_histogram.png)
