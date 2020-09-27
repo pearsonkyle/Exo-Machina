@@ -9,7 +9,25 @@ Here is a collection of words from the titles of ~20000 exoplanet-related manusc
 A language model is a mathematical representation for an algorithm used to generate sequences in the same way a human would to form sentances. Each word or letter in a sentance is encoded to a numerical value (e.g. using word2vec) and is appended to a list forming sequences that represent up to a paragraph worth of text. The sequences are fed into the [GPT-2](https://openai.com/blog/better-language-models/) 355M model and trained for 10,000 steps with fine tuning. After training, the language model is used to generate new text from scratch and from user input. A few generated samples are below: 
 
 ```
-We present, as a starting point, a simplified approach to identifying exoplanets by measuring their chemical abundances using an empirical Bayesian framework for modeling planetary biosignature atmospheres. In addition, we present an empirical Bayesian model to predict the chemical compositions and chemical abundances for exoplanets from gas-driven stellar evolution models. Theoretical models used to construct this general model include the stellar evolution (e.g., solar-type evolution), stellar evolutions (e.g., chemical evolution, photometric evolution and stellar age), and chemical abundance variations (e.g., formation, transport and/or elimination rate of the organic aerosols from their atmospheres). The simulated atmospheres of an exoplanet of a certain physical type, for which we have simulated the chemistry and chemical composition by applying our model, are compared with observations made before the beginning of the Kepler period. We find that our chemical models match well with the observations in some planetary systems, and agree well with stellar evolution and stellar age models. A comparison of the chemical compositions and abundances found in our models with those seen in the solar system indicates that chemical evolution is a natural part of the mass-radius relation.
+We present, as a starting point, a simplified approach to identifying 
+exoplanets by measuring their chemical abundances using an empirical 
+Bayesian framework for modeling planetary biosignature atmospheres. 
+In addition, we present an empirical Bayesian model to predict the 
+chemical compositions and chemical abundances for exoplanets from 
+gas-driven stellar evolution models. Theoretical models used to construct 
+this general model include the stellar evolution (e.g., solar-type 
+evolution), stellar evolutions (e.g., chemical evolution, photometric
+evolution and stellar age), and chemical abundance variations (e.g.,
+formation, transport and/or elimination rate of the organic aerosols
+from their atmospheres). The simulated atmospheres of an exoplanet of
+a certain physical type, for which we have simulated the chemistry and 
+chemical composition by applying our model, are compared with observations 
+made before the beginning of the Kepler period. We find that our chemical 
+models match well with the observations in some planetary systems, and 
+agree well with stellar evolution and stellar age models. A comparison 
+of the chemical compositions and abundances found in our models with 
+those seen in the solar system indicates that chemical evolution is a 
+natural part of the mass-radius relation.
 ```
 
 ```
