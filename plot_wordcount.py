@@ -52,13 +52,26 @@ if __name__ == '__main__':
         if tit[0]:
             if 'SUP' in tit[0] or 'SUB' in tit[0]:
                 continue
-            
+            if 'galaxy' in tit[0].lower():
+                continue
+            if 'dark matter' in tit[0].lower():
+                continue
+            if 'dark energy' in tit[0].lower():
+                continue
             allwords.extend(tit[0].split(' '))
 
     keywords = ADSDatabase.session.query(ADSEntry.keyword).all()
     for tit in titles:
         if tit[0]:
             if 'SUP' in tit[0] or 'SUB' in tit[0]:
+                continue
+            if 'galaxy' in tit[0].lower():
+                continue
+            if 'galaxies' in tit[0].lower():
+                continue
+            if 'dark matter' in tit[0].lower():
+                continue
+            if 'dark energy' in tit[0].lower():
                 continue
             allwords.extend(tit[0].split(' '))
 
