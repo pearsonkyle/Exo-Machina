@@ -152,9 +152,3 @@ Browse results on our [website]()
 - extract text from manuscript PDF
 - more training samples (currently 26569 abstracts)
 - twitter bot?
-
-## Other samples
-
-```
-A sample for the first study of transiting extrasolar planets is presented. In this study, the transits of both transits and non-transits of the primary companion were obtained for the two stars in order to test the existence of a period of time extending beyond the initial value of the transit time table that is required to be confirmed as transit data from future measurements. The results indicate that the two stars may have similar radii of about 0.5 R☉ while the secondary mass star can be identified as a massless mass. The data imply that there is a period of time, ≳20,000 days, that has elapsed between each transit that can be ascribed to the gravitational interactions of the two stars. This period appears to be consistent with the reported values for the orbital period of the two companion stars. This suggests that the properties of the orbits of both primary stars are similar.
-```
