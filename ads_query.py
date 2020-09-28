@@ -71,12 +71,12 @@ if __name__ == '__main__':
             print(paper.title, paper.bibcode)
 
     # get each papers references
-    bibcodes = ADSDatabase.session.query(ADSEntry.bibcode).all()
+    bibcodes = ADSDatabase.session.query(ADSEntry.bibcode).order_by(-ADSEntry.year).all()
     print('Total DB Entries:', len(bibcodes))
 
     for bibcode in bibcodes:
         papers = ads.SearchQuery(
-            q="citations(bibcode:{})".format(bibcode[0]), 
+            q="references(bibcode:{})".format(bibcode[0]), 
             fl=[
                 'title', 'citation_count', 'abstract', 
                 'pub', 'year', 'keyword','bibcode'

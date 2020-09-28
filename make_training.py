@@ -16,6 +16,9 @@ def parse_args():
     help_ = "Settings key"
     parser.add_argument("-k", "--key", help=help_, default="database", type=str)
 
+    help_ = "Delete bad keys"
+    parser.add_argument("-d","--delete", help=help_, default=False)
+
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -25,10 +28,10 @@ if __name__ == '__main__':
     settings = json.load(open(args.settings, 'r'))
     ADSDatabase = Database( settings=settings[args.key], dtype=ADSEntry )
     print('querying database...')
-    entrys = ADSDatabase.session.query(ADSEntry.title,ADSEntry.abstract).all()
+    entrys = ADSDatabase.session.query(ADSEntry.title,ADSEntry.abstract,ADSEntry.bibcode).all()
     abstracts = []
     for entry in entrys:
-        title,abstract = entry
+        title,abstract,bibcode = entry
 
         bad_words = [
             'galaxy','galaxies','dark matter',
@@ -37,12 +40,27 @@ if __name__ == '__main__':
             'Galaxy','Globular','globular','cluster',
             'Cluster','Quasar','Dark Energy', 'cosmological',
             'NGC','Herbig','Galaxies','White Dwarf','white dwarf',
+            'cosmic','microwave','Microwave', 'Dark energy', 
+            'neurtrino', 'Neutrino', 'Quark', 'quark', 'Milky Way',
+            'Galactic', 'Open Cluster', 'Open cluster', 'Cosmological',
+            'Baryon', 'baryon', 'Subdwarfs', 'subdwarfs',
+            'Type II', 'Type I', 'type II', 'type I', 'coronal mass',
+            'Prominence', 'Prominences','Coronal mass'
+            #'Binary','Comet', 'comet', 'asteroid', 'Asteroid'
         ]
 
         if title and abstract:
             bmask = check_in(title,bad_words) | check_in(abstract,bad_words)
             if not bmask:
                 abstracts.append(abstract)
+            else:
+                # delete bad entry
+                ADSDatabase.session.query(ADSEntry).filter(ADSEntry.bibcode==bibcode).delete()
+        else:
+            ADSDatabase.session.query(ADSEntry).filter(ADSEntry.bibcode==bibcode).delete()
+        
+    # commit all the deletions
+    ADSDatabase.session.commit()
 
     print("Total Entries:",len(entrys))
     print("Filtered Entries:",len(abstracts))

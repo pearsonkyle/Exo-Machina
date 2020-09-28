@@ -1,8 +1,11 @@
 footer {
   text-align: center;
-  padding: 3px;
   background-color: White;
   color: black;
+  
+  position: relative;
+  bottom: 0;
+  width: 100%;
 }
 
 .posts {
@@ -50,7 +53,7 @@ body {
 }
 
 .container {
-  padding: 2em;
+  padding: 5em;
 }
 
 /* GENERAL BUTTON STYLING */
@@ -63,6 +66,7 @@ button::after {
 }
 
 button {
+   bottom: 0;
   background: none;
   border: 3px solid #fff;
   border-radius: 5px;
