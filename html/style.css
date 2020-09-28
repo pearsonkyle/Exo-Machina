@@ -1,0 +1,98 @@
+  footer {
+    text-align: center;
+    padding: 3px;
+    background-color: White;
+    color: black;
+  }
+  
+  .posts {
+    list-style:none;
+    margin:0;
+    padding:0;
+    max-width:1500px;
+    margin:0 auto;
+    padding:50px;
+    width:100%;
+    display:block;
+
+    li {
+      background-color:#fff;
+      border:1px solid #ccc;
+      margin:0;
+      padding:30px;
+      margin-bottom:10px;
+      width:calc(100% / 1.15 - 82px);
+      display:inline-block;
+      vertical-align:top;
+      height:auto;
+      overflow:hidden;
+      margin-right:10px;
+    }
+
+    p {
+      margin:0;
+      padding:0;
+    }
+    h1 {
+      margin:0;
+      padding:0;
+      margin-bottom:20px
+    }
+  }
+  
+
+  body {
+    background: #2ecc71;
+    font-size: 80.0%;
+  }
+  
+  .container {
+    padding: 2em;
+  }
+  
+  /* GENERAL BUTTON STYLING */
+  button,
+  button::after {
+    -webkit-transition: all 0.3s;
+      -moz-transition: all 0.3s;
+    -o-transition: all 0.3s;
+      transition: all 0.3s;
+  }
+  
+  button {
+    background: none;
+    border: 3px solid #fff;
+    border-radius: 5px;
+    color: #fff;
+    display: block;
+    font-size: 1.6em;
+    font-weight: bold;
+    margin: 0.25em auto;
+    padding: 2em 6em;
+    position: relative;
+    text-transform: uppercase;
+  }
+  
+  button::before,
+  button::after {
+    background: #fff;
+    content: '';
+    position: absolute;
+    z-index: -1;
+  }
+  
+  button:hover {
+    color: #2ecc71;
+  }
+  
+  /* BUTTON 1 */
+  .btn-1::after {
+    height: 0;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  
+  .btn-1:hover:after {
+    height: 100%;
+  }
