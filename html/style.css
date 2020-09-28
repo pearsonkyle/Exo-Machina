@@ -69,8 +69,8 @@ body {
 }
 
 .container {
-  padding: em 5em;
-
+  padding: 1em 5em;
+  
   margin: 0;
 }
 
@@ -88,10 +88,10 @@ button {
   border: 3px solid #fff;
   border-radius: 5px;
   color: #fff;
-  display: block;
+  display: flex;
   font-size: 1.6em;
   font-weight: bold;
-  margin: 1em auto;
+  margin: 2em auto;
   padding: 2em 5em;
   position: relative;
   text-transform: uppercase;
