@@ -55,15 +55,7 @@ natural part of the mass-radius relation.
 }
 ```
 
-The language model is also capable of generating sequences from user input: 
-```json
-Input: The infrared atmospheres of transiting exoplanets
-Output:
-```
-
-Explore more outputs here
-
-## Instructions
+## Dev Instructions
 
 python dependencies: sqlalchemy, ads, matplotlib, numpy, wordcloud
 
@@ -148,5 +140,5 @@ Browse results on our [website]()
 - bigger language model (355M + 10000 steps was used here)
 - supervised training on sentances with references
 - extract text from manuscript PDF
-- more training samples (currently 26569 abstracts)
+- more training samples (currently 20569 abstracts)
 - twitter bot?
