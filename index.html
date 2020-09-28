@@ -1,24 +1,17 @@
-<head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="html/style.css">
-</head>
-
-<ul class="posts"></ul>
-<div class="container">
-<button onClick="window.location.reload();" class="btn-1">Refresh</button>
-</div>
-
-<footer>
-  <p> <a href="https://github.com/pearsonkyle/Exo-Machina">Exo-Machina</a> v. alpha
-  <br> Author: Kyle Pearson
-    <br> Text is generated using the <a href="https://github.com/openai/gpt-2">GPT-2</a> language model and fine-tuned with data from NASA's <a href="https://ui.adsabs.harvard.edu/">Astrophysical Data System</a>.
-    <br> 
-</footer>
-<script>
-$.getJSON("html/samples.json", function(posts) {
-    const randIndex = Math.floor(Math.random() * posts["samples"].length);
-     for(var post = 0; post < 1; post++) {
-       $(".posts").append("<li>" + "<h1>" + "Input: " + posts["samples"][randIndex]["Input"] + "</h1>" + "<p>" + "<b>Output:</b> "+ posts["samples"][randIndex]["Output"] + "</p>" + "</li>");
-     }
-   });
-</script>
+<body>
+  <div id="page-container">
+    <div id="content-wrap">
+      <ul class="posts"></ul>
+ 
+   <button onClick="window.location.reload();" class="btn-1">Refresh</button>
+ 
+    </div>
+    <footer id="footer">
+      <p> <a href="https://github.com/pearsonkyle/Exo-Machina">Exo-Machina v. alpha</a>
+        <br> Author: Kyle Pearson
+        <br> Text is generated using the <a href="https://github.com/openai/gpt-2">GPT-2</a> language model and fine-tuned with data from NASA's <a href="https://ui.adsabs.harvard.edu/">Astrophysical Data System</a>.
+        <br> 
+ 
+    </footer>
+  </div>
+ </body>

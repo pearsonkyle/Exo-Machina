@@ -1,11 +1,23 @@
-footer {
-  text-align: center;
-  background-color: White;
-  color: black;
-  
+
+#page-container {
   position: relative;
+  min-height: 100vh;
+}
+
+#content-wrap {
+  padding-bottom: 5rem;    /* Footer height */
+}
+
+#footer {
+  position: absolute;
   bottom: 0;
   width: 100%;
+  height: 6rem;            /* Footer height */
+  
+  text-align: center;
+  text-position: center;
+  background-color: White;
+  color: black;  
 }
 
 .posts {
@@ -49,11 +61,17 @@ h1 {
 
 body {
   background: linear-gradient(0deg, rgba(253,187,45,1) 0%,rgba(34,193,195,1)  100%);
+  height: 100%;
+  margin: 0;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   font-size: 125.0%;
 }
 
 .container {
-  padding: 5em;
+  padding: em 5em;
+
+  margin: 0;
 }
 
 /* GENERAL BUTTON STYLING */
@@ -66,7 +84,6 @@ button::after {
 }
 
 button {
-   bottom: 0;
   background: none;
   border: 3px solid #fff;
   border-radius: 5px;
@@ -74,8 +91,8 @@ button {
   display: block;
   font-size: 1.6em;
   font-weight: bold;
-  margin: 0.25em auto;
-  padding: 2em 6em;
+  margin: 1em auto;
+  padding: 2em 5em;
   position: relative;
   text-transform: uppercase;
 }
