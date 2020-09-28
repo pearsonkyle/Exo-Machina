@@ -1,6 +1,8 @@
 # Exo-Machina
 A deep language model, GPT-2, is trained on scientific manuscripts from NASA's Astrophysical Data System pertaining to extrasolar planets and the references therein. This pilot study uses the abstracts of each article as training data in order to explore correlations scientific literature from a language perspective. 
 
+### [Try it!](https://pearsonkyle.github.io/Exo-Machina/)
+
 Here is a collection of words from the titles of ~20000 exoplanet-related manuscripts:
 
 ![](Figures/exoplanet_wordcloud.png)
