@@ -44,10 +44,9 @@ h1 {
     
 }
 
-
 body {
-  background: #2ecc71;
-  font-size: 150.0%;
+  background: linear-gradient(0deg, rgba(253,187,45,1) 0%,rgba(34,193,195,1)  100%);
+  font-size: 125.0%;
 }
 
 .container {
@@ -86,7 +85,7 @@ button::after {
 }
 
 button:hover {
-  color: #2ecc71;
+  color:  rgb(34,193,195);
 }
 
 /* BUTTON 1 */
