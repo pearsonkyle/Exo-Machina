@@ -45,7 +45,8 @@ if __name__ == '__main__':
             'Galactic', 'Open Cluster', 'Open cluster', 'Cosmological',
             'Baryon', 'baryon', 'Subdwarfs', 'subdwarfs',
             'Type II', 'Type I', 'type II', 'type I', 'coronal mass',
-            'Prominence', 'Prominences','Coronal mass'
+            'Prominence', 'Prominences','Coronal mass','Boyajian',
+            'interstellar medium', 'IGM', 'ISM'
             #'Binary','Comet', 'comet', 'asteroid', 'Asteroid'
         ]
 

@@ -28,9 +28,9 @@
   </div>
   <script>
     $.getJSON("https://pearsonkyle.github.io/Exo-Machina/html/samples.json", function(posts) {
-   const randIndex = Math.floor(Math.random() * posts["samples"].length);
     for(var post = 0; post < 1; post++) {
-      $(".posts").append("<li>" + "<h1>" + "Input: " + posts["samples"][randIndex]["Input"] + "</h1>" + "<p>" + "<b>Output:</b> "+ posts["samples"][randIndex]["Output"] + "</p>" + "<br />" +randIndex+"/"+posts["samples"].length + "</li>");
+   const randIndex = Math.floor(Math.random() * posts["samples"].length);
+      $(".posts").append("<li>" + "<h1>" + "Input: " + posts["samples"][randIndex]["Input"] + "</h1>" + "<p>" + "<b>Output:</b> "+ posts["samples"][randIndex]["Output"] + "</p>" + "<br /><p style='text-align:right;'>" + randIndex+"/"+posts["samples"].length + "</p></li>");
     }
   });
   </script>
