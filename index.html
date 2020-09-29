@@ -30,7 +30,7 @@
     $.getJSON("https://pearsonkyle.github.io/Exo-Machina/html/samples.json", function(posts) {
    const randIndex = Math.floor(Math.random() * posts["samples"].length);
     for(var post = 0; post < 1; post++) {
-      $(".posts").append("<li>" + "<h1>" + "Input: " + posts["samples"][randIndex]["Input"] + "</h1>" + "<p>" + "<b>Output:</b> "+ posts["samples"][randIndex]["Output"] + "</p>" + "</li>");
+      $(".posts").append("<li>" + "<h1>" + "Input: " + posts["samples"][randIndex]["Input"] + "</h1>" + "<p>" + "<b>Output:</b> "+ posts["samples"][randIndex]["Output"] + "</p>" + randIndex+"/"+posts["samples"].length + "</li>");
     }
   });
   </script>
