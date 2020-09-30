@@ -46,7 +46,9 @@ if __name__ == '__main__':
             'Baryon', 'baryon', 'Subdwarfs', 'subdwarfs',
             'Type II', 'Type I', 'type II', 'type I', 'coronal mass',
             'Prominence', 'Prominences','Coronal mass','Boyajian',
-            'interstellar medium', 'IGM', 'ISM'
+            'interstellar medium', 'IGM', 'ISM', 'href', 'url', 'Redshifts',
+            '21-cm', '21 cm', 'Relativity', 'Relativistic', 'SuperNova', 'super nova',
+            'Super Nova', 'pulsar', 'Pulsar', 'open clusters'
             #'Binary','Comet', 'comet', 'asteroid', 'Asteroid'
         ]
 
