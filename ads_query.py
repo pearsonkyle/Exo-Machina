@@ -2,6 +2,8 @@ import os
 import ads
 import json
 import argparse
+from bs4 import BeautifulSoup
+import urllib.request
 
 from database import Database, ADSEntry
 
@@ -59,6 +61,10 @@ if __name__ == '__main__':
         sort="citation_count", max_pages=2
     )
 
+    for paper in papers: 
+        if int(paper.year) >= 2014:
+            break
+
     # add papers to db
     for paper in papers:
         data = format_entry(paper)
@@ -79,7 +85,7 @@ if __name__ == '__main__':
             q="references(bibcode:{})".format(bibcode[0]), 
             fl=[
                 'title', 'citation_count', 'abstract', 
-                'pub', 'year', 'keyword','bibcode'
+                'pub', 'year', 'keyword','bibcode', 'identifier'
             ],
             sort="citation_count", max_pages=4
         )
@@ -110,4 +116,5 @@ if __name__ == '__main__':
     paper.bibstem               paper.database              paper.items                 paper.property              paper.volume
     paper.bibtex                paper.first_author          paper.iteritems             paper.pub                   paper.year
     '''
-    # citations(abstract:HST)
+    # citations(abstract:HST)\\
+

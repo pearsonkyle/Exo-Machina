@@ -37,7 +37,6 @@ if __name__ == '__main__':
 
     settings = json.load(open(args.settings, 'r'))
     ADSDatabase = Database( settings=settings[args.key], dtype=ADSEntry )
-    
 
     entrys = ADSDatabase.session.query(
         ADSEntry.title,ADSEntry.keyword,ADSEntry.year,ADSEntry.pub,ADSEntry.abstract).all()
