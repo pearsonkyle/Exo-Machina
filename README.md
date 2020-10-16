@@ -135,6 +135,9 @@ https://colab.research.google.com/drive/1AwnFTGzqvGNFxfhwfWo6cVbwEFOiAfrl#scroll
 
 Browse results on our [website]()
 
+## Cloud scraping
+Use collab to scrape PDFs and avoid rate limiting by factory reseting the instance periodically
+https://colab.research.google.com/drive/1mfbEwWHLggmgLdbK6wrz4gFECPH79Y96#scrollTo=98rfwR_s8hMg
 
 ## Things to improve
 - bigger language model (355M + 10000 steps was used here)
