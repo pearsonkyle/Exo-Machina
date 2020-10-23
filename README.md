@@ -145,3 +145,12 @@ https://colab.research.google.com/drive/1mfbEwWHLggmgLdbK6wrz4gFECPH79Y96#scroll
 - extract text from manuscript PDF
 - more training samples (currently 20569 abstracts)
 - twitter bot?
+
+
+References
+- https://huggingface.co/roberta-base 
+- GPT-2 generative text
+- https://huggingface.co/docs
+- https://huggingface.co/transformers/training.html
+- https://huggingface.co/transformers/notebooks.html
+https://colab.research.google.com/drive/1vsCh85T_Od7RBwXfvh1iysV-vTxmWXQO#scrollTo=ljknzOlNoyrv
