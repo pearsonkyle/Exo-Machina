@@ -58,7 +58,7 @@ if __name__ == '__main__':
             'title', 'citation_count', 'abstract', 
             'pub', 'year', 'keyword','bibcode'
         ],
-        sort="citation_count", max_pages=2
+        sort="citation_count", max_pages=5
     )
 
     for paper in papers: 

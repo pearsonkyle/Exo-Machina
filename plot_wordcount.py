@@ -51,6 +51,16 @@ if __name__ == '__main__':
             'Galaxy','Globular','globular','cluster',
             'Cluster','Quasar','Dark Energy', 'cosmological',
             'NGC','Herbig','Galaxies','White Dwarf','white dwarf',
+            'cosmic','microwave','Microwave', 'Dark energy', 
+            'neurtrino', 'Neutrino', 'Quark', 'quark', 'Milky Way',
+            'Galactic', 'Open Cluster', 'Open cluster', 'Cosmological',
+            'Baryon', 'baryon', 'Subdwarfs', 'subdwarfs',
+            'Type II', 'Type I', 'type II', 'type I', 'coronal mass',
+            'Prominence', 'Prominences','Coronal mass','Boyajian',
+            'interstellar medium', 'IGM', 'ISM', 'href', 'url', 'Redshifts',
+            '21-cm', '21 cm', 'Relativity', 'Relativistic', 'SuperNova', 'super nova',
+            'Super Nova', 'pulsar', 'Pulsar', 'open clusters', 'Ga'
+            #'Binary','Comet', 'comet', 'asteroid', 'Asteroid'
         ]
 
         if title and abstract:
@@ -95,9 +105,12 @@ if __name__ == '__main__':
     # plt.show()
 
     # # Generate a word cloud image
-    titlecloud = WordCloud(width=1600, height=800).generate(' '.join(allwords))
+    titlecloud = WordCloud(
+        width=1932, height=1200, colormap='ocean',
+        background_color='white',font_path='Nasa21.ttf',
+        normalize_plurals=False).generate(' '.join(allwords))
 
-    f,ax = plt.subplots(1,figsize=(14,8))
+    f,ax = plt.subplots(1,figsize=(14,9))
     ax.imshow(titlecloud)
     ax.axis("off")
     plt.tight_layout()
