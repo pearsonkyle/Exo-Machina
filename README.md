@@ -96,16 +96,10 @@ The number of manuscripts for each year:
 ## Pre-processing
 Extract abstracts from the database and create a new file where each line is an new sample. Try a new tokenizer
 
-## Things to improve
-
-## Export the models to an iOS application
-
-
 References
 - https://huggingface.co/roberta-base 
-- GPT-2 generative text
 - https://huggingface.co/docs
 - https://huggingface.co/transformers/training.html
 - https://huggingface.co/transformers/notebooks.html
-https://colab.research.google.com/drive/1vsCh85T_Od7RBwXfvh1iysV-vTxmWXQO#scrollTo=ljknzOlNoyrv
-http://jalammar.github.io/illustrated-gpt2/
+- https://colab.research.google.com/drive/1vsCh85T_Od7RBwXfvh1iysV-vTxmWXQO#scrollTo=ljknzOlNoyrv
+- http://jalammar.github.io/illustrated-gpt2/
