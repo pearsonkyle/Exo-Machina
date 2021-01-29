@@ -12,7 +12,7 @@ A deep language model, GPT-2, is trained on scientific manuscripts from NASA's A
 ```python
 from transformers import pipeline
 
-machina = pipeline('text-generation',model='gpt2-exomachina/checkpoint-320000', tokenizer='gpt2',config={'max_length':1600})
+machina = pipeline('text-generation',model='pearsonkyle/gpt2-exomachina', tokenizer='gpt2',config={'max_length':1600})
 
 print(machina("Transiting exoplanets are")[0]['generated_text'])
 ```
