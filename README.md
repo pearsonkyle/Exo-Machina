@@ -1,9 +1,11 @@
 # Exo-Machina
 A deep language model, GPT-2, is trained on scientific manuscripts from NASA's Astrophysical Data System pertaining to extrasolar planets and the references therein. This pilot study uses the abstracts of each article as training data in order to explore correlations in scientific literature from a language perspective. A language model is a mathematical representation for an algorithm used to generate sequences in the same way a human would to form sentances. Each word or letter in a sentance is encoded to a numerical value (e.g. using word2vec) and is appended to a list forming sequences that represent up to a paragraph worth of text. The sequences are fed into the [GPT-2](https://openai.com/blog/better-language-models/) 117M model and trained for 500,000 steps with fine tuning. After training, the language model is used to generate new text from scratch and from user input. 
 
-- ### [Browse some samples](https://pearsonkyle.github.io/Exo-Machina/)
+- ### [View on Hugging Face API](https://huggingface.co/pearsonkyle/gpt2-exomachina?text=We+can+remotely+sense+an+atmosphere+by+observing+its+reflected%2C+transmitted%2C+or+emitted+light+in+varying+geometries.+This+light+will+contain+information+on+the+planetary+conditions+including)
 
-- ### [Train a model on Google Colab]()
+- ### [Train your own model on Google Colab](https://colab.research.google.com/drive/1Pur0rFi5YVdn7axYRacXWFMic4NxRexV?usp=sharing)
+
+- ### Try it for [iOS](https://apps.apple.com/us/app/exo-machina/id1542390138)
 
 ### Get started fast:
 
