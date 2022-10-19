@@ -59,13 +59,18 @@ class Database():
     @property
     def engine_string(self):
         # local db
-        mystring = "{}://{}:{}@{}:{}/{}".format(
-            self.settings['dialect'],
-            self.settings['username'],
-            self.settings['password'],
-            self.settings['endpoint'],
-            self.settings['port'],
-            self.settings['dbname'] )
+        if self.settings['dialect'] == 'postgresql':
+            mystring = "{}://{}:{}@{}:{}/{}".format(
+                self.settings['dialect'],
+                self.settings['username'],
+                self.settings['password'],
+                self.settings['endpoint'],
+                self.settings['port'],
+                self.settings['dbname'] )
+        elif self.settings['dialect'] == 'sqlite':
+            mystring = "{}:///{}".format(
+                self.settings['dialect'],
+                self.settings['dbname'] )
         return mystring
 
     def _check_session(foo):

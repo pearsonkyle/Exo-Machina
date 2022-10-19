@@ -3,16 +3,17 @@ A deep language model, GPT-2, is trained on scientific manuscripts from NASA's A
 
 - ### [Browse some samples](https://pearsonkyle.github.io/Exo-Machina/)
 
-- ### [Train a model on Google Colab]()
+- ### [Train a model on Google Colab](https://colab.research.google.com/drive/1Pur0rFi5YVdn7axYRacXWFMic4NxRexV?usp=sharing)
 
 ### Get started fast:
 
 ```python
 from transformers import pipeline
 
-machina = pipeline('text-generation',model='gpt2-exomachina/checkpoint-320000', tokenizer='gpt2',config={'max_length':1600})
+exo = pipeline('text-generation',model='pearsonkyle/gpt2-exomachina', tokenizer='gpt2', config={'max_length':1600})
+machina = lambda text: exo(text)[0]['generated_text']
 
-print(machina("Transiting exoplanets are")[0]['generated_text'])
+print(machina("Transiting exoplanets are"))
 ```
 
 ## Training Samples
@@ -27,35 +28,12 @@ A few generated samples are below:
 `that large, deciduous forest fires are composed of mostly dry, unprocessed material that is distributed in a nearly patchy fashion. The distributions of these fires are correlated with temperature, and also with vegetation...`
 - *Directly imaged exoplanets probe* `key aspects of planet formation and evolution theory, as well as atmospheric and interior physics. These insights have led to numerous direct imaging instruments for exoplanets, many using polarimetry. However, current instruments take`
 
-## Instructions
+## Generate Training Data
 
-- ### Setup a SQL Databse to store training samples
-A postegres SQL database is set up on Amazon RDS in order to provide online access to the same data for multiple computers. Follow the instructions below to set up your own database using the Free Tier of services on AWS: 
+Scrape [ADS](https://ads.readthedocs.io/en/latest/
+) and save entries into a sql database: 
 
-1. sign in or register: https://aws.amazon.com/
-2. Search for a services and go to RDS 
-
-Add your credentials to a new file called `settings.json` like such:
-```
-{
-    "database":{
-        "dialect":"postgresql",
-        "username":"readonly",
-        "password":"readonly",
-        "endpoint":"exomachina.c4luhvcn1k1s.us-east-2.rds.amazonaws.com",
-        "port":5432,
-        "dbname":"exomachina"
-    }
-}
-```
-
-## Scraping NASA ADS
-
-https://ads.readthedocs.io/en/latest/
-
-Scrape ADS and save entries into a sql database: 
-
-`python ads_query.py -s settings.json -q exoplanet`
+`python ads_query.py -q "transiting exoplanet"`
 
 ```
 usage: ads_query.py [-h] [-q QUERY] [-s SETTINGS] [-k KEY]
@@ -69,7 +47,7 @@ optional arguments:
   -k KEY, --key KEY     Settings key
 ```
 
-Letting the scrape run for ~2 hours found articles from these publications in descending order:
+The current database contains ~40,000 abstracts from:
 ```
  5364 - The Astrophysical Journal
  3365 - Astronomy and Astrophysics
@@ -92,11 +70,16 @@ The number of manuscripts for each year:
 ![](Figures/exoplanet_histogram.png)
 
 ## Pre-processing
-Extract abstracts from the database and create a new file where each line is an new sample. Try a new tokenizer
+Extract abstracts from the database and create a new file where each line is an new sample.
 
-## Things to improve
+`python db_to_text.py`
+
+## Train your own model
+
+Once you generate an `abstracts.txt` file, you can train your own model.
 
 ## Export the models to an iOS application
+
 
 
 References

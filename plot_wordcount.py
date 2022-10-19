@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
     # # Generate a word cloud image
     titlecloud = WordCloud(
-        width=1932, height=1200, colormap='ocean',
+        width=1242, height=2688, colormap='ocean',
         background_color='white',font_path='Nasa21.ttf',
         normalize_plurals=False).generate(' '.join(allwords))
 

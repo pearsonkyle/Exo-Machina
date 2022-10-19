@@ -49,8 +49,9 @@ if __name__ == '__main__':
     ADSDatabase = Database( settings=settings[args.key], dtype=ADSEntry )
 
     # create table
-    #ADSEntry.__table__.create(ADSDatabase.engine)
-    
+    if not os.path.exists(settings['database']['dbname']):
+        ADSEntry.__table__.create(ADSDatabase.engine)
+
     # initial query 
     papers = ads.SearchQuery(
         q=args.query, 
@@ -58,12 +59,8 @@ if __name__ == '__main__':
             'title', 'citation_count', 'abstract', 
             'pub', 'year', 'keyword','bibcode'
         ],
-        sort="citation_count", max_pages=5
+        sort="citation_count", max_pages=50
     )
-
-    for paper in papers: 
-        if int(paper.year) >= 2014:
-            break
 
     # add papers to db
     for paper in papers:
@@ -87,7 +84,7 @@ if __name__ == '__main__':
                 'title', 'citation_count', 'abstract', 
                 'pub', 'year', 'keyword','bibcode', 'identifier'
             ],
-            sort="citation_count", max_pages=4
+            sort="citation_count", max_pages=40
         )
 
         try:
@@ -104,10 +101,6 @@ if __name__ == '__main__':
         except:
             pass
 
-    # rates = ads.RateLimits('SearchQuery')
-    # r.limits['remaining'] > 100 
-    # r.limits['limit']
-
     '''fields
     paper.abstract              paper.build_citation_tree   paper.first_author_norm     paper.keys                  paper.pubdate
     paper.aff                   paper.build_reference_tree  paper.id                    paper.keyword               paper.read_count
@@ -116,5 +109,3 @@ if __name__ == '__main__':
     paper.bibstem               paper.database              paper.items                 paper.property              paper.volume
     paper.bibtex                paper.first_author          paper.iteritems             paper.pub                   paper.year
     '''
-    # citations(abstract:HST)\\
-

@@ -1,0 +1,10 @@
+{
+    "database":{
+        "dialect":"sqlite",
+        "username":"",
+        "password":"",
+        "endpoint":"",
+        "port":"",
+        "dbname":"exomachina"
+    }
+}
