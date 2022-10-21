@@ -29,7 +29,7 @@ A few generated samples are below:
 Scrape [ADS](https://ads.readthedocs.io/en/latest/
 ) and save entries into a sql database: 
 
-`python ads_query.py -q "transiting exoplanet"`
+`python query_ads.py -q "transiting exoplanet"`
 
 The current database contains ~40,000 abstracts from:
 ```
@@ -58,7 +58,11 @@ Extract abstracts from the database and create a new file where each line is an 
 
 `python db_to_text.py`
 
-## Train a model on [Google Colab](https://colab.research.google.com/drive/1Pur0rFi5YVdn7axYRacXWFMic4NxRexV?usp=sharing)
+## Train on a custom dataset
+
+- Train a model on [Google Colab](https://colab.research.google.com/drive/1Pur0rFi5YVdn7axYRacXWFMic4NxRexV?usp=sharing) 
+- or set up your python environment: `conda env create -f environment.yml`
+- Train a model locally with: `train.py`
 
 ## Convert to Hugging Face API
 
