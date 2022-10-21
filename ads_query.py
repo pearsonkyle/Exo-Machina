@@ -8,6 +8,7 @@ import urllib.request
 from database import Database, ADSEntry
 
 ads.config.token = 'snWV2OTqoHYMxdOBQH4VzsDHYxMBrcJTXLOgTI2N'
+#ads.config.token = 'EGKettNZn6Doq1cCPH8yBmFFEcwmczCSknbPZBji'
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -18,8 +19,8 @@ def parse_args():
     help_ = "Settings file"
     parser.add_argument("-s", "--settings", help=help_, default="settings.json", type=str)
 
-    help_ = "Settings key"
-    parser.add_argument("-k", "--key", help=help_, default="database", type=str)
+    help_ = "Max pages"
+    parser.add_argument("-m", "--max_pages", help=help_, default=10, type=int)
 
     return parser.parse_args()
 
@@ -52,16 +53,17 @@ if __name__ == '__main__':
     if not os.path.exists(settings['database']['dbname']):
         ADSEntry.__table__.create(ADSDatabase.engine)
 
-    # initial query 
+    # initial query
     papers = ads.SearchQuery(
         q=args.query, 
         fl=[
             'title', 'citation_count', 'abstract', 
             'pub', 'year', 'keyword','bibcode'
         ],
-        sort="citation_count", max_pages=50
+        sort="citation_count", max_pages=args.max_pages
     )
 
+    bibcodes = []
     # add papers to db
     for paper in papers:
         data = format_entry(paper)
@@ -71,7 +73,9 @@ if __name__ == '__main__':
         if not checkval: 
             ADSDatabase.session.add( ADSEntry(**data))
             ADSDatabase.session.commit()
+            import pdb; pdb.set_trace()
             print(paper.title, paper.bibcode)
+            bibcodes.append(paper.bibcode)
 
     # get each papers references
     bibcodes = ADSDatabase.session.query(ADSEntry.bibcode).order_by(-ADSEntry.year).all()
@@ -84,7 +88,7 @@ if __name__ == '__main__':
                 'title', 'citation_count', 'abstract', 
                 'pub', 'year', 'keyword','bibcode', 'identifier'
             ],
-            sort="citation_count", max_pages=40
+            sort="citation_count", max_pages=args.max_pages
         )
 
         try:

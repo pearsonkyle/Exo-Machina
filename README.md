@@ -3,8 +3,6 @@ A deep language model, GPT-2, is trained on scientific manuscripts from NASA's A
 
 - ### [View on Hugging Face API](https://huggingface.co/pearsonkyle/gpt2-exomachina?text=We+can+remotely+sense+an+atmosphere+by+observing+its+reflected%2C+transmitted%2C+or+emitted+light+in+varying+geometries.+This+light+will+contain+information+on+the+planetary+conditions+including)
 
-- ### [Train a model on Google Colab](https://colab.research.google.com/drive/1Pur0rFi5YVdn7axYRacXWFMic4NxRexV?usp=sharing)
-
 ### Get started fast:
 
 ```python
@@ -12,8 +10,6 @@ from transformers import pipeline
 
 exo = pipeline('text-generation',model='pearsonkyle/gpt2-exomachina', tokenizer='gpt2', config={'max_length':1600})
 machina = lambda text: exo(text)[0]['generated_text']
-
-print(machina("Transiting exoplanets are"))
 ```
 
 ## Training Samples
@@ -34,18 +30,6 @@ Scrape [ADS](https://ads.readthedocs.io/en/latest/
 ) and save entries into a sql database: 
 
 `python ads_query.py -q "transiting exoplanet"`
-
-```
-usage: ads_query.py [-h] [-q QUERY] [-s SETTINGS] [-k KEY]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -q QUERY, --query QUERY
-                        Initial search criteria
-  -s SETTINGS, --settings SETTINGS
-                        Settings file
-  -k KEY, --key KEY     Settings key
-```
 
 The current database contains ~40,000 abstracts from:
 ```
@@ -74,11 +58,14 @@ Extract abstracts from the database and create a new file where each line is an 
 
 `python db_to_text.py`
 
-## Train your own model
+## Train a model on [Google Colab](https://colab.research.google.com/drive/1Pur0rFi5YVdn7axYRacXWFMic4NxRexV?usp=sharing)
 
-Once you generate an `abstracts.txt` file, you can train your own model.
+## Convert to Hugging Face API
 
-## Export the models to an iOS application
+## Upload to iOS
+
+`python gpt2_to_coreml.py`
+
 
 
 
@@ -89,3 +76,4 @@ References
 - https://huggingface.co/transformers/notebooks.html
 - https://colab.research.google.com/drive/1vsCh85T_Od7RBwXfvh1iysV-vTxmWXQO#scrollTo=ljknzOlNoyrv
 - http://jalammar.github.io/illustrated-gpt2/
+- https://github.com/huggingface/swift-coreml-transformers.git

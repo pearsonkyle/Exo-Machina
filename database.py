@@ -125,6 +125,7 @@ class ADSEntry(Base, DatabaseObject):
         'pub', 'year', 'keyword','text']
 
     # define columns of table
+    #id = Column(Integer, primary_key=True, autoincrement=True)
     bibcode = Column(String, primary_key=True)
     title = Column(String)
     citation_count = Column(Integer)
