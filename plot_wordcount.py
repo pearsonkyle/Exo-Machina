@@ -1,5 +1,3 @@
-import os
-import ads
 import json
 import argparse
 import numpy as np
@@ -14,9 +12,6 @@ def parse_args():
 
     help_ = "Settings file"
     parser.add_argument("-s", "--settings", help=help_, default="settings.json", type=str)
-
-    help_ = "Settings key"
-    parser.add_argument("-k", "--key", help=help_, default="database", type=str)
 
     return parser.parse_args()
 
@@ -36,7 +31,7 @@ if __name__ == '__main__':
     args = parse_args()
 
     settings = json.load(open(args.settings, 'r'))
-    ADSDatabase = Database( settings=settings[args.key], dtype=ADSEntry )
+    ADSDatabase = Database( settings=settings['database'], dtype=ADSEntry )
 
     entrys = ADSDatabase.session.query(
         ADSEntry.title,ADSEntry.keyword,ADSEntry.year,ADSEntry.pub,ADSEntry.abstract).all()
@@ -95,14 +90,14 @@ if __name__ == '__main__':
 
     # year of publication
     print("N Articles:",len(years))
-    # years = np.array(years)
-    # plt.hist(years,bins=np.arange(min(years),max(years)+1))
-    # plt.xlabel("Year")
-    # plt.grid(True,ls='--')
-    # plt.tight_layout()
-    # plt.xlim([np.mean(years)-3*np.std(years),max(years)])
-    # plt.savefig("year_histogram.pdf")
-    # plt.show()
+    years = np.array(years)
+    plt.hist(years,bins=np.arange(min(years),max(years)+1))
+    plt.xlabel("Year")
+    plt.grid(True,ls='--')
+    plt.tight_layout()
+    plt.xlim([np.mean(years)-3*np.std(years),max(years)])
+    plt.savefig("year_histogram.png")
+    plt.show()
 
     # # Generate a word cloud image
     titlecloud = WordCloud(
@@ -114,5 +109,5 @@ if __name__ == '__main__':
     ax.imshow(titlecloud)
     ax.axis("off")
     plt.tight_layout()
-    f.savefig("wordcloud.pdf",dpi=1000)
+    f.savefig("wordcloud.png",dpi=1000)
     plt.show()
