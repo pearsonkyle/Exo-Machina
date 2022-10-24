@@ -3,6 +3,7 @@ import ads
 import json
 import argparse
 import numpy as np
+from tqdm import tqdm
 
 from database import Database, ADSEntry
 from plot_wordcount import check_in
@@ -29,7 +30,7 @@ if __name__ == '__main__':
     ADSDatabase = Database( settings=settings[args.key], dtype=ADSEntry )
     print('querying database...')
     #entrys = ADSDatabase.session.query(ADSEntry.title,ADSEntry.abstract,ADSEntry.text,ADSEntry.bibcode).filter(ADSEntry.text!="").all()
-    entrys = ADSDatabase.session.query(ADSEntry.title,ADSEntry.abstract,ADSEntry.bibcode).all()
+    entrys = ADSDatabase.session.query(ADSEntry.title,ADSEntry.abstract,ADSEntry.bibcode).order_by(ADSEntry.id).all()
 
     samples = []
     for entry in entrys:
@@ -55,7 +56,7 @@ if __name__ == '__main__':
         ]
 
         if title and abstract:
-            bmask = check_in(title,bad_words) | check_in(abstract,bad_words)
+            bmask = check_in(title,bad_words) | check_in(abstract,bad_words) | (len(abstract) < 100)
             if not bmask:
                 samples.append(abstract)
             else:
@@ -67,10 +68,17 @@ if __name__ == '__main__':
     # commit all the deletions
     ADSDatabase.session.commit()
 
+    # redo the ids
+    entrys = ADSDatabase.session.query(ADSEntry).order_by(ADSEntry.id).all()
+    for i,entry in enumerate(entrys):
+        entry.id = i
+    ADSDatabase.session.commit()
+
+
     print("Total Entries:",len(entrys))
     print("Filtered Entries:",len(samples))
     with open("abstracts.txt","w") as afile:
-        for i in range(len(samples)):
+        for i in tqdm(range(len(samples))):
 
             if not samples[i]:
                 continue
@@ -148,5 +156,8 @@ if __name__ == '__main__':
                 continue
 
             if len(abstr)>100:
-                afile.write(abstr.decode("utf-8","ignore").strip()+"\n")
+                # combine with bibcode
+                line = f"{abstr.decode('utf-8','ignore')}\n"
+                afile.write(line)
+
     print("abstracts.txt written")

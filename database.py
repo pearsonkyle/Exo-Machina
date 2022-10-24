@@ -3,6 +3,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, desc
 from sqlalchemy.sql import text, exists
+from sqlalchemy_utils import database_exists, create_database, drop_database
+from tqdm import tqdm
 
 from datetime import datetime
 import json
@@ -52,10 +54,14 @@ class Database():
         self.DBSession = sessionmaker(bind=self.engine)
         self.sess = self.DBSession()
 
+    def insert(self, data):
+        self.session.add(data)
+        self.session.commit()
+
     @property
     def count(self):
         return self.session.query(self.dtype).count()
-        
+    
     @property
     def engine_string(self):
         # local db
@@ -116,7 +122,7 @@ class Database():
         return self.session.query(self.dtype).filter(*args).limit(count).all()
 
 ################### custom table
-class ADSEntry(Base, DatabaseObject):
+class OldEntry(Base, DatabaseObject):
     __tablename__ = "exoplanet"
 
     @staticmethod
@@ -125,7 +131,6 @@ class ADSEntry(Base, DatabaseObject):
         'pub', 'year', 'keyword','text']
 
     # define columns of table
-    #id = Column(Integer, primary_key=True, autoincrement=True)
     bibcode = Column(String, primary_key=True)
     title = Column(String)
     citation_count = Column(Integer)
@@ -136,24 +141,64 @@ class ADSEntry(Base, DatabaseObject):
     text = Column(String)
 ##############################
 
+
+################### custom table
+class ADSEntry(Base, DatabaseObject):
+    __tablename__ = "ads"
+
+    @staticmethod
+    def keys():
+        return ['id','bibcode', 'title', 'citation_count', 'abstract', \
+        'pub', 'year', 'keyword','text','introduction','conclusion']
+
+    # define columns of table
+    id = Column(Integer, autoincrement=True)
+    bibcode = Column(String, primary_key=True)
+    title = Column(String)
+    citation_count = Column(Integer)
+    abstract = Column(String)
+    pub = Column(String)
+    year = Column(Integer)
+    keyword = Column(String)
+    text = Column(String) # tokenized text
+    introduction = Column(String)
+    conclusion = Column(String)
+##############################
+
 if __name__ == "__main__":
     settings = json.load(open('settings.json', 'r'))
-    dbTEST = Database( settings=settings['database'], dtype=ADS_DB )
+    dbOLD = Database( settings=settings['database'], dtype=OldEntry)
+    dbNEW = Database( settings=settings['database'], dtype=ADSEntry)
 
-    #ARTest.__table__.create(dbTEST.engine)
-    
-    mostrecent = dbTEST.session.query(ARTest).order_by(ARTest.timestamp.desc()).first()
-    print(mostrecent)
-    results = dbTEST.query(ARTest.latitude<32,ARTest.longitude>-110, count=10)
-    print(results)
+    # create new table and migrate old entries
+    ADSEntry.__table__.drop(dbNEW.engine)
+    ADSEntry.__table__.create(dbNEW.engine)
+
+    # migrate old entries to new table
+    entrys = dbOLD.session.query(OldEntry).all()
+    for i in tqdm(range(len(entrys))):
+        data = entrys[i].toJSON()
+        data['id'] = i
+        dbNEW.session.add(ADSEntry(**data))
+    dbNEW.session.commit()
+
+    dude()
+
+    # if not database_exists(dbTEST.engine.url):
+    #     create_database(dbTEST.engine.url)
+    # else:
+    #     drop_database(dbTEST.engine.url)
+    #     print("dropped")
+    #     create_database(dbTEST.engine.url)
+
+    print(database_exists(dbTEST.engine.url))
+
+    dtype.__table__.create(dbTEST.engine)
+    print("Number of entries:",dbTEST.count)
+    #dtype.__table__.drop(dbTEST.engine)
 
     import pdb; pdb.set_trace() 
-    #dbTEST.session.query(ARTest).filter(ARTest.latitude<32).limit(10).all()
-    dbTEST.session.query(dbTEST.dtype).delete()
-    dbTEST.session.commit()
 
-    #db.session.query(dbTEST.dtype).filter(dbTEST.dtype.id==123).delete()
-    #db.session.commit()
 
     '''
     for i in range(5):
@@ -161,7 +206,7 @@ if __name__ == "__main__":
                 'timestamp':datetime.utcnow(),
                 'latitude': np.random.random()*10+20, 
                 'longitude': -120 + np.random.random()*15,
-                'user':'Professor Munchies',
+                'user':'The dude',
                 'url':'https://poly.google.com/view/6FrJ3_CzH8S',
                 'api':'google poly'
         }
