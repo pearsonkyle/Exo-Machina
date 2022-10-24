@@ -84,10 +84,18 @@ class Database():
             try:
                 return foo( self )
             except:
+                self.close()
+                del self.engine, self.DBSession, self.sess
                 self.create_session()
                 return foo( self )
                 # TODO create something that quits after N fails? 
         return magic
+
+    def remove(self, *args):
+        self.session.query(self.dtype).filter(*args).delete()
+
+    def query(self, *args, count=10):
+        return self.session.query(self.dtype).filter(*args).limit(count).all()
 
     @property
     @_check_session
