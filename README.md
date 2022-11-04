@@ -64,6 +64,12 @@ Extract abstracts from the database and create a new file where each line is an 
 - or set up your python environment: `conda env create -f environment.yml`
 - Train a model locally with: `train.py`
 
+## Recommendations
+
+`python text_to_vec.py`
+
+
+
 ## Convert to Hugging Face API
 
 ## Upload to iOS
