@@ -1,4 +1,4 @@
-#python -m bokeh serve --show bokeh_example.py
+# python -m bokeh serve --show bokeh_example.py
 import time
 import json
 import pickle
@@ -27,7 +27,7 @@ pca = pickle.load(open("pca.pkl", "rb"))
 process_input = lambda x: pca.transform(vectorizer.transform([spacy_tokenizer(x)]).toarray())[0]
 
 class TextAI:
-    def __init__(self, db, model_checkpoint='./models/checkpoint-90000', neighbor_file=f'test_525.ann'):
+    def __init__(self, db, model_checkpoint='./models/checkpoint-90000', neighbor_file=f'test_742.ann'):
         self.db = db
         self.model = pipeline('text-generation',model=model_checkpoint, tokenizer='gpt2', config={'max_length':200})
         ndim = int(neighbor_file.split('_')[-1].split('.')[0])
@@ -40,6 +40,7 @@ class TextAI:
         self.div.text = self.recs[i][0] + '<br><br>' + self.recs[i][2]
         # add hyperlink to ADS
         self.div.text += f'<br><br><a href="https://ui.adsabs.harvard.edu/abs/{self.recs[i][1]}/abstract" target="_blank">{self.recs[i][1]}</a>'
+        self.div_text.text = self.recs[i][3]
 
     def __call__(self, x, n=5):
         # generate text 
@@ -51,7 +52,7 @@ class TextAI:
         # get similar abstracts
         nids = self.neighbors.get_nns_by_vector(process_input(x), 10, search_k=-1, include_distances=False)
         entrys = self.db.query(self.db.dtype.id.in_(nids)) # thread issue with gradio (could cache instead)
-        paper_recs = [[entry.title,entry.bibcode,entry.abstract] for entry in entrys]
+        paper_recs = [[entry.title,entry.bibcode,entry.abstract,entry.text] for entry in entrys]
         self.text = text_suggestions
         self.recs = paper_recs
         return text_suggestions, paper_recs
@@ -71,9 +72,9 @@ text, papers = textai(custom_text,3)
 
 # buttons for text auto-complete
 auto_buttons = [
-    Button(label=text[0], button_type="success", height=50, width=600),
-    Button(label=text[1], button_type="warning", height=50, width=600),
-    Button(label=text[2], button_type="danger", height=50, width=600),
+    Button(label=text[0], button_type="success", height=50, width=700),
+    Button(label=text[1], button_type="warning", height=50, width=700),
+    Button(label=text[2], button_type="danger", height=50, width=700),
 ]
 
 # add button handler
@@ -100,7 +101,8 @@ def my_text_input_handler(attr, old, new):
 text_input.on_change("value", my_text_input_handler)
 
 # div to show abstract recommendations
-textai.div = Div(text=""" """, style={"overflow-wrap": "break-word", "width": "600px"}, width=600)
+textai.div = Div(text=""" """, style={"overflow-wrap": "break-word", "width": "800px"}, width=800)
+textai.div_text = Div(text=""" """, style={"overflow-wrap": "break-word", "width": "800px"}, width=800)
 
 # create layout
 rec_buttons[0].on_click(lambda event: textai.set_div(0))
@@ -115,7 +117,8 @@ curdoc().add_root(layout([
     [text_input, auto_buttons],
     rec_buttons[:3],
     rec_buttons[3:], 
-    textai.div # title+absract
+    [textai.div, # title+absract
+     textai.div_text] # keywords
 ]))
 
 curdoc().title = "Exo-Machina"

@@ -69,7 +69,6 @@ Extract abstracts from the database and create a new file where each line is an 
 `python text_to_vec.py`
 
 
-
 ## Convert to Hugging Face API
 
 ## Upload to iOS
