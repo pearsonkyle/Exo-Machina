@@ -24,13 +24,6 @@ A few generated samples are below:
 `that large, deciduous forest fires are composed of mostly dry, unprocessed material that is distributed in a nearly patchy fashion. The distributions of these fires are correlated with temperature, and also with vegetation...`
 - *Directly imaged exoplanets probe* `key aspects of planet formation and evolution theory, as well as atmospheric and interior physics. These insights have led to numerous direct imaging instruments for exoplanets, many using polarimetry. However, current instruments take`
 
-## Generate Training Data
-
-Scrape [ADS](https://ads.readthedocs.io/en/latest/
-) and save entries into a sql database: 
-
-`python query_ads.py -q "transiting exoplanet"`
-
 The current database contains ~40,000 abstracts from:
 ```
  5364 - The Astrophysical Journal
@@ -50,26 +43,49 @@ The current database contains ~40,000 abstracts from:
  109 - Geophysical Research Letters
 ```
 
-The number of manuscripts for each year: 
+The number of manuscripts for each year:
+
 ![](Figures/exoplanet_histogram.png)
 
-## Pre-processing
-Extract abstracts from the database and create a new file where each line is an new sample.
+TODO update stats
+
+## Generate Training Data
+
+Scrape [ADS](https://ads.readthedocs.io/en/latest/
+) and save entries into a sql database: 
+
+`python query_ads.py -q "transiting exoplanet"`
+
+## Pre-processing for text generation
+Extract abstracts from the database and create a new file where each line is a different abstract
 
 `python db_to_text.py`
 
+## Create custom vocab based on the training data
+
+`python custom_vocab.py`
+
 ## Train on a custom dataset
+
+`python train.py`
 
 - Train a model on [Google Colab](https://colab.research.google.com/drive/1Pur0rFi5YVdn7axYRacXWFMic4NxRexV?usp=sharing) 
 - or set up your python environment: `conda env create -f environment.yml`
-- Train a model locally with: `train.py`
 
-## Recommendations
+
+## Nearest Neighbor Recommendations
+
+Build a nearest neighbor tree from the training data and use it to recommend similar abstracts
 
 `python text_to_vec.py`
 
+## Local Webserver
+
+`python -m bokeh serve --show bokeh_example.py`
 
 ## Convert to Hugging Face API
+
+TODO
 
 ## Upload to iOS
 
