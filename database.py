@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Float, Integer, String
+from sqlalchemy import Column, DateTime, Float, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, desc
@@ -188,13 +188,12 @@ class ARXIVEntry(Base, DatabaseObject):
     pub = Column(String)
     year = Column(Integer)
     categories = Column(String)
-    keywords = Column(String)
     doi = Column(String)
 
     @staticmethod
     def keys():
         return ['id', 'bibcode', 'bibtex', 'title', 'citation_count', 'abstract', \
-        'text', 'pub', 'year', 'categories', 'keywords', 'doi']
+        'text', 'pub', 'year', 'categories', 'doi']
 
 ##############################
 
