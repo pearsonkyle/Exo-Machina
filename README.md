@@ -31,23 +31,27 @@ Set up your local python environment using: `conda env create -f environment.yml
 
 Or, use pip: `pip install -r requirements.txt`
 
-
 ## Training Samples
 
 ~2.1 million abstracts from the [Arxiv](https://arxiv.org/) available on [Kaggle](https://www.kaggle.com/datasets/Cornell-University/arxiv). Also, see this Hugging Face [dataset](https://huggingface.co/datasets/scientific_papers) for more text data including the entire PDF parsed into text.
 
 ## Pre-processing for text generation/embedding
-After downloading the Arxiv json above, run the following to conver it into a sqlite database: `json2db.py`
+After downloading the Arxiv json above, run the following to conver it into a sqlite database:
+    1. `python database.py` to create sql database
+    2. `python json2db.py` to populate the db with json data from arxiv
 
-## Train on a custom dataset
+## Train on a custom datset
+Train a language model using the commands below:
+    1. `python db2txt.py` to create a text file with one abstract per line
+    2. `python train.py` to train a GPT-2 model
 
-Use  `db2txt.py` to create a text file with one abstract per line
-
-Then, run the following command to train the model: `python train.py` (or use [Google Colab](https://colab.research.google.com/drive/1Pur0rFi5YVdn7axYRacXWFMic4NxRexV?usp=sharing) )
+Interested in training this model in the cloud? Try this repo on [Google Colab](https://colab.research.google.com/drive/1Pur0rFi5YVdn7axYRacXWFMic4NxRexV?usp=sharing) )
 
 ## Add to the database with NASA ADS
 
 Use NASA's Astrophysical Data System (ADS) to add more abstracts to the database. See `query_ads.py -h` for more details.
+
+`python query_ads.py -q "transiting exoplanets"`
 
 ## Embeddings
 

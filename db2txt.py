@@ -89,7 +89,8 @@ if __name__ == '__main__':
             abstr = abstr.replace(b"\xe2\x88",b"")
             abstr = abstr.replace(b"\x97",b"")
             abstr = abstr.replace(b"\xbb",b"")
-
+            abstr = abstr.replace(b"\xc3\xa2\xc2\x88\xc2\x9e",b"")
+            abstr = abstr.replace(b"\xc3\xa2\xc2\x89\xc2\xa4",b"")
             abstr = abstr.replace(b"\t",b"")
 
             abstr = abstr.replace(b"     ",b" ")
@@ -98,3 +99,8 @@ if __name__ == '__main__':
             # write abstract to file
             if len(abstr)>100:
                 f.write(abstr.decode("utf-8") + '\n')
+                # replace entry in database with cleaned up version
+                DB.session.query(Entry).filter(Entry.bibcode==bibcode).update({Entry.abstract:abstr.decode("utf-8")})
+
+    # commit changes to database
+    DB.session.commit()
