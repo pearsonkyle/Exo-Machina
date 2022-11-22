@@ -1,5 +1,5 @@
 # Exo-Machina
-A deep language model, GPT-2, is trained on scientific manuscripts from NASA's Astrophysical Data System pertaining to extrasolar planets and the references therein. This pilot study uses the abstracts of each article as training data in order to explore correlations in scientific literature from a language perspective. A language model is a mathematical representation for an algorithm used to generate sequences in the same way a human would to form sentances. Each word or letter in a sentance is encoded to a numerical value (e.g. using word2vec) and is appended to a list forming sequences that represent up to a paragraph worth of text. The sequences are fed into the [GPT-2](https://openai.com/blog/better-language-models/) 117M model and trained for 500,000 steps with fine tuning. After training, the language model is used to generate new text from scratch and from user input. 
+A deep language model, GPT-2, is trained on scientific manuscripts from [ArXiv](https://arxiv.org/). This pilot study uses abstracts from ~1.7M articles as training data in order to explore correlations in scientific literature from a language modelling perspective. A language models are algorithms used to generate sequences of numers that correspond to tokens or words and can be used to represent sentances. The text samples are fed into the [GPT-2](https://openai.com/blog/better-language-models/) 117M and 774M model and trained for ~500,000 steps with fine tuning. After training, the language model is used to generate embeddings for each manuscript which can be clustered for visualization applications and queried for entity searches.
 
 - ### [View on Hugging Face API](https://huggingface.co/pearsonkyle/gpt2-exomachina?text=We+can+remotely+sense+an+atmosphere+by+observing+its+reflected%2C+transmitted%2C+or+emitted+light+in+varying+geometries.+This+light+will+contain+information+on+the+planetary+conditions+including)
 
@@ -12,8 +12,8 @@ exo = pipeline('text-generation',model='pearsonkyle/gpt2-exomachina', tokenizer=
 machina = lambda text: exo(text)[0]['generated_text']
 ```
 
-## Training Samples
-~40,000 Abstracts from NASA's Astrophysical data system (ADS) and ArXiv. 
+For the large model (GPT-2 774M) use: `pearsonkyle/gpt2-exomachina-large` (Coming soon...)
+
 
 ![](Figures/exoplanet_keywords.png)
 
@@ -24,62 +24,44 @@ A few generated samples are below:
 `that large, deciduous forest fires are composed of mostly dry, unprocessed material that is distributed in a nearly patchy fashion. The distributions of these fires are correlated with temperature, and also with vegetation...`
 - *Directly imaged exoplanets probe* `key aspects of planet formation and evolution theory, as well as atmospheric and interior physics. These insights have led to numerous direct imaging instruments for exoplanets, many using polarimetry. However, current instruments take`
 
-The current database contains ~40,000 abstracts from:
-```
- 5364 - The Astrophysical Journal
- 3365 - Astronomy and Astrophysics
- 2704 - Monthly Notices of the Royal Astronomical Society
- 1355 - The Astronomical Journal
- 617 - arXiv e-prints
- 498 - Icarus
- 388 - Publications of the Astronomical Society of the Pacific
- 324 - The Astrophysical Journal Supplement Series
- 245 - Nature
- 187 - Journal of Geophysical Research
- 167 - Science
- 145 - Astronomische Nachrichten
- 129 - Planetary and Space Science
- 114 - Space Science Reviews
- 109 - Geophysical Research Letters
-```
 
-The number of manuscripts for each year:
+## Dependencies 
 
-![](Figures/exoplanet_histogram.png)
+Set up your local python environment using: `conda env create -f environment.yml`
 
-TODO update stats
+Or, use pip: `pip install -r requirements.txt`
 
-## Generate Training Data
 
-Scrape [ADS](https://ads.readthedocs.io/en/latest/
-) and save entries into a sql database: 
+## Training Samples
 
-`python query_ads.py -q "transiting exoplanet"`
+~2.1 million abstracts from the [Arxiv](https://arxiv.org/) available on [Kaggle](https://www.kaggle.com/datasets/Cornell-University/arxiv). Also, see this Hugging Face [dataset](https://huggingface.co/datasets/scientific_papers) for more text data including the entire PDF parsed into text.
 
-## Pre-processing for text generation
-Extract abstracts from the database and create a new file where each line is a different abstract
-
-`python db_to_text.py`
-
-## Create custom vocab based on the training data
-
-`python custom_vocab.py`
+## Pre-processing for text generation/embedding
+After downloading the Arxiv json above, run the following to conver it into a sqlite database: `json2db.py`
 
 ## Train on a custom dataset
 
-`python train.py`
+Use  `db2txt.py` to create a text file with one abstract per line
 
-- Train a model on [Google Colab](https://colab.research.google.com/drive/1Pur0rFi5YVdn7axYRacXWFMic4NxRexV?usp=sharing) 
-- or set up your python environment: `conda env create -f environment.yml`
+Then, run the following command to train the model: `python train.py` (or use [Google Colab](https://colab.research.google.com/drive/1Pur0rFi5YVdn7axYRacXWFMic4NxRexV?usp=sharing) )
 
+## Add to the database with NASA ADS
+
+Use NASA's Astrophysical Data System (ADS) to add more abstracts to the database. See `query_ads.py -h` for more details.
+
+## Embeddings
+
+The language model is used to generate embeddings for each manuscript which can be clustered for visualization applications and queried for entity searches. The embeddings are generated by taking the last hidden state of the model and averaging over the tokens in the text. The embeddings are then clustered using an approximate nearest neighbor technique (ANNOY) and queried with FAISS. The embeddings are also used to generate a [TF-IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) matrix for entity search.
 
 ## Nearest Neighbor Recommendations
 
-Build a nearest neighbor tree from the training data and use it to recommend similar abstracts
+Build a nearest neighbor tree from the text embeddings and use it to recommend similar abstracts
 
 `python text_to_vec.py`
 
-## Local Webserver
+## Example Demo
+
+Text generation and nearest neighbor recommendations in a single app:
 
 `python -m bokeh serve --show bokeh_example.py`
 
@@ -90,7 +72,6 @@ TODO
 ## Upload to iOS
 
 `python gpt2_to_coreml.py`
-
 
 
 

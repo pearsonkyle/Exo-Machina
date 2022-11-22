@@ -83,12 +83,10 @@ if __name__ == '__main__':
     t.build(10) # 10 trees
     t.save(f'test_{X_reduced.shape[1]:d}.ann')
 
-
     # test query
     u = AnnoyIndex(X_reduced.shape[1], 'angular')
     u.load(f'test_{X_reduced.shape[1]:d}.ann') # super fast, will just mmap the file
     #print(u.get_nns_by_item(0, 10)) # will find the 1000 nearest neighbors
-
 
     custom_text = "One of the key drivers of the Mars Exploration Program is the search for evidence of past or present life. In this context, the most relevant martian environments to search for extant life are those associated with liquid water, and locations that experience periodic thawing of near-surface ice. In this work, we use convolutional neural networks to detect surface regions containing Brain Coral terrain, a landform on Mars whose similarity in morphology and scale to sorted stone circles on Earth suggests that it may have formed as a consequence of freeze/thaw cycles."
     vecs = u.get_nns_by_vector(process_input(custom_text), 10, search_k=-1, include_distances=False)

@@ -23,6 +23,7 @@ tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 
 # train from scratch
 model = GPT2LMHeadModel.from_pretrained("gpt2", pad_token_id=tokenizer.eos_token_id)
+
 # model = GPT2LMHeadModel.from_pretrained("distilgpt2", pad_token_id=tokenizer.eos_token_id) # finished training, 61 epochs ~2.2
 
 # train from checkpoint

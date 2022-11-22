@@ -172,9 +172,12 @@ dependencies:
   - zstd=1.5.2
   - pip:
     - accelerate==0.14.0
+    - ads==0.12.3
     - filelock==3.8.0
     - greenlet==2.0.1
+    - httpretty==0.8.10
     - huggingface-hub==0.11.0
+    - mock==4.0.3
     - psutil==5.9.4
     - pyyaml==6.0
     - regex==2022.10.31
@@ -183,3 +186,4 @@ dependencies:
     - tokenizers==0.13.2
     - tqdm==4.64.1
     - transformers==4.24.0
+    - werkzeug==2.2.2
