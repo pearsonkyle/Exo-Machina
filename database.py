@@ -150,6 +150,7 @@ class OldEntry(Base, DatabaseObject):
 ##############################
 
 
+
 ################### custom table
 class ADSEntry(Base, DatabaseObject):
     __tablename__ = "ads"
@@ -171,42 +172,66 @@ class ADSEntry(Base, DatabaseObject):
     text = Column(String) # tokenized text
     introduction = Column(String)
     conclusion = Column(String)
+
+
+class ARXIVEntry(Base, DatabaseObject):
+    __tablename__ = "arxiv"
+
+    # define columns of table
+    id = Column(Integer, autoincrement=True)
+    bibcode = Column(String, primary_key=True)
+    bibtex = Column(String)
+    title = Column(String)
+    citation_count = Column(Integer)
+    abstract = Column(String)
+    text = Column(String)
+    pub = Column(String)
+    year = Column(Integer)
+    categories = Column(String)
+    keywords = Column(String)
+    doi = Column(String)
+
+    @staticmethod
+    def keys():
+        return ['id', 'bibcode', 'bibtex', 'title', 'citation_count', 'abstract', \
+        'text', 'pub', 'year', 'categories', 'keywords', 'doi']
+
 ##############################
 
 if __name__ == "__main__":
     settings = json.load(open('settings.json', 'r'))
-    dbOLD = Database( settings=settings['database'], dtype=OldEntry)
-    dbNEW = Database( settings=settings['database'], dtype=ADSEntry)
 
-    # create new table and migrate old entries
-    ADSEntry.__table__.drop(dbNEW.engine)
-    ADSEntry.__table__.create(dbNEW.engine)
+    # migrate table
+    # dbOLD = Database( settings=settings['database'], dtype=OldEntry)
+    # dbNEW = Database( settings=settings['database'], dtype=ADSEntry)
+    # # create new table and migrate old entries
+    # ADSEntry.__table__.drop(dbNEW.engine)
+    # ADSEntry.__table__.create(dbNEW.engine)
+    # # migrate old entries to new table
+    # entrys = dbOLD.session.query(OldEntry).all()
+    # for i in tqdm(range(len(entrys))):
+    #     data = entrys[i].toJSON()
+    #     data['id'] = i
+    #     dbNEW.session.add(ADSEntry(**data))
+    # dbNEW.session.commit()
+    # dude()
 
-    # migrate old entries to new table
-    entrys = dbOLD.session.query(OldEntry).all()
-    for i in tqdm(range(len(entrys))):
-        data = entrys[i].toJSON()
-        data['id'] = i
-        dbNEW.session.add(ADSEntry(**data))
-    dbNEW.session.commit()
+    # create new table
+    dbNEW = Database( settings=settings['database'], dtype=ARXIVEntry)
 
-    dude()
+    if not database_exists(dbNEW.engine.url):
+        create_database(dbNEW.engine.url)
+    else:
+        drop_database(dbNEW.engine.url)
+        print("dropped")
+        create_database(dbNEW.engine.url)
+        print("created")
 
-    # if not database_exists(dbTEST.engine.url):
-    #     create_database(dbTEST.engine.url)
-    # else:
-    #     drop_database(dbTEST.engine.url)
-    #     print("dropped")
-    #     create_database(dbTEST.engine.url)
+    print(database_exists(dbNEW.engine.url))
 
-    print(database_exists(dbTEST.engine.url))
-
-    dtype.__table__.create(dbTEST.engine)
-    print("Number of entries:",dbTEST.count)
-    #dtype.__table__.drop(dbTEST.engine)
-
-    import pdb; pdb.set_trace() 
-
+    dbNEW.dtype.__table__.create(dbNEW.engine)
+    print("Number of entries:",dbNEW.count)
+    #dtype.__table__.drop(dbNEW.engine)
 
     '''
     for i in range(5):
