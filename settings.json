@@ -5,6 +5,6 @@
         "password":"",
         "endpoint":"",
         "port":"",
-        "dbname":"exomachina"
+        "dbname":"exomachina.db"
     }
 }
