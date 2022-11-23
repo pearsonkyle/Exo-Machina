@@ -31,7 +31,7 @@ if __name__ == '__main__':
     entrys = DB.session.query(Entry.title,Entry.abstract,Entry.bibcode).order_by(Entry.id).all()
 
     # open output file
-    with open(args.output, 'w') as f:
+    with open(args.output, 'w', errors='ignore') as f:
         # loop over lines and write abstracts
         for i in tqdm(range(len(entrys))):
             title,abstract,bibcode = entrys[i]
