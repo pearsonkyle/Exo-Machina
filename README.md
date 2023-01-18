@@ -1,5 +1,5 @@
 # Exo-Machina
-A deep language model, GPT-2, is trained on scientific manuscripts from [ArXiv](https://arxiv.org/). This pilot study uses abstracts from ~1.7M articles as training data in order to explore correlations in scientific literature from a language modelling perspective. A language models are algorithms used to generate sequences of numers that correspond to tokens or words and can be used to represent sentances. The text samples are fed into the [GPT-2](https://openai.com/blog/better-language-models/) 117M and 774M model and trained for ~500,000 steps with fine tuning. After training, the language model is used to generate embeddings for each manuscript which can be clustered for visualization applications and queried for entity searches.
+A deep language model, GPT-2, is trained on scientific manuscripts from [ArXiv](https://arxiv.org/). This pilot study uses abstracts from ~2.1 articles as training data in order to explore correlations in scientific literature from a language modelling perspective. A language models are algorithms used to generate sequences of numers that correspond to tokens or words and can be used to represent sentances. The text samples are fed into the [GPT-2](https://openai.com/blog/better-language-models/) 117M and 774M model and trained for ~500,000 steps with fine tuning. After training, the language model is used to generate embeddings for each manuscript which can be clustered for visualization applications and queried for entity searches.
 
 - ### [View on Hugging Face API](https://huggingface.co/pearsonkyle/gpt2-exomachina?text=We+can+remotely+sense+an+atmosphere+by+observing+its+reflected%2C+transmitted%2C+or+emitted+light+in+varying+geometries.+This+light+will+contain+information+on+the+planetary+conditions+including)
 
@@ -8,8 +8,8 @@ A deep language model, GPT-2, is trained on scientific manuscripts from [ArXiv](
 ```python
 from transformers import pipeline
 
-exo = pipeline('text-generation',model='pearsonkyle/gpt2-exomachina', tokenizer='gpt2', config={'max_length':1600})
-machina = lambda text: exo(text)[0]['generated_text']
+ai = pipeline('text-generation',model='pearsonkyle/gpt2-arxiv', tokenizer='gpt2', config={'max_length':1600})
+machina = lambda text: ai(text)[0]['generated_text']
 ```
 
 For the large model (GPT-2 774M) use: `pearsonkyle/gpt2-exomachina-large` (Coming soon...)

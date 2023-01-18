@@ -1,7 +1,7 @@
 import os
 import json
+import random
 import argparse
-import numpy as np
 from tqdm import tqdm
 
 from database import Database
@@ -29,6 +29,11 @@ if __name__ == '__main__':
     DB = Database( settings=settings[args.key], dtype=Entry )
     print(f'querying database... ({DB.count} entries)')
     entrys = DB.session.query(Entry.title,Entry.abstract,Entry.bibcode).order_by(Entry.id).all()
+
+    # randomize the order of the abstracts
+    random.shuffle(entrys)
+    #entrys = entrys[:int(len(entrys)/2)]
+    #entrys = entrys[int(len(entrys)/2):]
 
     # open output file
     with open(args.output, 'w', errors='ignore') as f:
@@ -89,8 +94,10 @@ if __name__ == '__main__':
             abstr = abstr.replace(b"\xe2\x88",b"")
             abstr = abstr.replace(b"\x97",b"")
             abstr = abstr.replace(b"\xbb",b"")
+            abstr = abstr.replace(b"\xbf",b"") 
             abstr = abstr.replace(b"\xc3\xa2\xc2\x88\xc2\x9e",b"")
             abstr = abstr.replace(b"\xc3\xa2\xc2\x89\xc2\xa4",b"")
+            abstr = abstr.replace(b"\xc2",b"")
             abstr = abstr.replace(b"\t",b"")
 
             abstr = abstr.replace(b"     ",b" ")
