@@ -1,11 +1,10 @@
-import os
-import json
 import random
 import argparse
 from tqdm import tqdm
+import ftfy
+from cleantext import clean
 
-from database import Database
-from database import ARXIVEntry as Entry
+from database import Database, PAPERentry
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -25,18 +24,19 @@ if __name__ == '__main__':
 
     args = parse_args()
 
-    settings = json.load(open(args.settings, 'r'))
-    DB = Database( settings=settings[args.key], dtype=Entry )
+    # load database
+    DB = Database.load('settings.json', dtype=PAPERentry)
+
     print(f'querying database... ({DB.count} entries)')
-    entrys = DB.session.query(Entry.title,Entry.abstract,Entry.bibcode).order_by(Entry.id).all()
+    entrys = DB.session.query(PAPERentry.title,PAPERentry.abstract,PAPERentry.bibcode).all()
 
     # randomize the order of the abstracts
     random.shuffle(entrys)
-    #entrys = entrys[:int(len(entrys)/2)]
-    #entrys = entrys[int(len(entrys)/2):]
+
+    exceptions = []
 
     # open output file
-    with open(args.output, 'w', errors='ignore') as f:
+    with open(args.output, 'w') as f:
         # loop over lines and write abstracts
         for i in tqdm(range(len(entrys))):
             title,abstract,bibcode = entrys[i]
@@ -55,7 +55,7 @@ if __name__ == '__main__':
             abstr = abstr.replace("\t"," ")
             abstr = abstr.replace("\r"," ")
 
-            abstr = abstr.encode("utf-8", "ignore")
+            abstr = abstr.encode("utf-8")
             abstr = abstr.replace(b"\xef\xac\x81",b"fi")
             abstr = abstr.replace(b"\xef\xac\x83",b"fi")
             abstr = abstr.replace(b"\xe2\x80\x99",b"'")
@@ -68,6 +68,22 @@ if __name__ == '__main__':
             abstr = abstr.replace(b"\\times",b"x")
             abstr = abstr.replace(b"\xc2\xb5m",b"micron")
             abstr = abstr.replace(b"\x99",b"'")
+            abstr = abstr.replace(b"\xb3",b"")
+            abstr = abstr.replace(b"\xb0",b"")
+            abstr = abstr.replace(b"\xf0",b"")
+            abstr = abstr.replace(b"\xe2\x8a\x95",b"Earth") # earth cross
+            abstr = abstr.replace(b"\xe2\x8a",b"Sun") # sun dot
+            abstr = abstr.replace(b"\x9e",b"Infinity")
+            abstr = abstr.replace(b"\xe2\x86\x92",b"approaches")
+            abstr = abstr.replace(b"\xbd",b"v")
+            abstr = abstr.replace(b"\xc3\xb8",b"oi")
+            abstr = abstr.replace(b"\xbd",b"nu")
+            abstr = abstr.replace(b"\xb4",b"gamma")
+            abstr = abstr.replace(b"\xe2\x89\x88",b"about")
+            abstr = abstr.replace(b"\xe2\x89",b"greater than or equal to")
+            abstr = abstr.replace(b"\xbc", b"micro ")
+            abstr = abstr.replace(b"\xb4",b"delta")
+
 
             abstr = abstr.replace(b"\xc2\xa9",b"")
             abstr = abstr.replace(b"\xcb\x87",b"")
@@ -88,7 +104,7 @@ if __name__ == '__main__':
             abstr = abstr.replace(b"\xb2",b"")
             abstr = abstr.replace(b"\xc2\xb1 ",b"+-")
             abstr = abstr.replace(b"\xce",b"")
-
+            abstr = abstr.replace(b"\xf1",b"")
             abstr = abstr.replace(b"\xb7",b"")
             abstr = abstr.replace(b"\xc2\xa7",b"Section")
             abstr = abstr.replace(b"\xe2\x88",b"")
@@ -98,16 +114,38 @@ if __name__ == '__main__':
             abstr = abstr.replace(b"\xc3\xa2\xc2\x88\xc2\x9e",b"")
             abstr = abstr.replace(b"\xc3\xa2\xc2\x89\xc2\xa4",b"")
             abstr = abstr.replace(b"\xc2",b"")
-            abstr = abstr.replace(b"\t",b"")
+            abstr = abstr.replace(b"\xef",b"")
+            abstr = abstr.replace(b"\xe9",b"")
+            abstr = abstr.replace(b"\xed",b"")
+            abstr = abstr.replace(b"\xc9",b"")
 
+            abstr = abstr.replace(b"\t",b"")
             abstr = abstr.replace(b"     ",b" ")
             abstr = abstr.replace(b"  ",b" ")
 
+            # remove all non utf-8 characters
+            abstr = abstr.decode("utf-8", "ignore").encode("utf-8")
+
+            abstr = ftfy.fix_text(abstr.decode("utf-8"))
+
+            abstr = clean(abstr)
+
             # write abstract to file
             if len(abstr)>100:
-                f.write(abstr.decode("utf-8") + '\n')
-                # replace entry in database with cleaned up version
-                DB.session.query(Entry).filter(Entry.bibcode==bibcode).update({Entry.abstract:abstr.decode("utf-8")})
+                try:
+                    f.write(abstr + '\n')
+
+                    # replace entry in database with cleaned up version
+                    #DB.session.query(PAPERentry).filter(PAPERentry.bibcode==bibcode).update({PAPERentry.abstract:abstr})
+                except Exception as ex:
+                    continue
+                #    exceptions.append((bibcode, ex))
+
+                    # delete entry from database
+                    #DB.session.query(PAPERentry).filter(PAPERentry.bibcode==bibcode).delete()
+
+    print(f"Exceptions: {len(exceptions)}")
 
     # commit changes to database
-    DB.session.commit()
+    #DB.session.commit()
+    DB.close()

@@ -4,7 +4,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, desc
 from sqlalchemy.sql import text, exists
 from sqlalchemy_utils import database_exists, create_database, drop_database
-from tqdm import tqdm
 
 from datetime import datetime
 import json
@@ -129,62 +128,24 @@ class Database():
     def query(self,*args, count=10):
         return self.session.query(self.dtype).filter(*args).limit(count).all()
 
-################### custom table
-class OldEntry(Base, DatabaseObject):
-    __tablename__ = "exoplanet"
-
     @staticmethod
-    def keys():
-        return ['bibcode', 'title', 'citation_count', 'abstract', \
-        'pub', 'year', 'keyword','text']
-
-    # define columns of table
-    bibcode = Column(String, primary_key=True)
-    title = Column(String)
-    citation_count = Column(Integer)
-    abstract = Column(String)
-    pub = Column(String)
-    year = Column(Integer)
-    keyword = Column(String)
-    text = Column(String)
-##############################
+    def load(filename, dtype, key='database'):
+        # load database settings from json file
+        with open(filename,'r') as f:
+            settings = json.load(f)[key]
+        return Database(settings=settings, dtype=dtype)
 
 
-
-################### custom table
-class ADSEntry(Base, DatabaseObject):
-    __tablename__ = "ads"
-
-    @staticmethod
-    def keys():
-        return ['id','bibcode', 'title', 'citation_count', 'abstract', \
-        'pub', 'year', 'keyword','text','introduction','conclusion']
-
-    # define columns of table
-    id = Column(Integer, autoincrement=True)
-    bibcode = Column(String, primary_key=True)
-    title = Column(String)
-    citation_count = Column(Integer)
-    abstract = Column(String)
-    pub = Column(String)
-    year = Column(Integer)
-    keyword = Column(String)
-    text = Column(String) # tokenized text
-    introduction = Column(String)
-    conclusion = Column(String)
-
-
-class ARXIVEntry(Base, DatabaseObject):
-    __tablename__ = "arxiv"
+class PAPERentry(Base, DatabaseObject):
+    __tablename__ = "papers"
 
     # define columns of table
     id = Column(Integer, autoincrement=True)
     bibcode = Column(String, primary_key=True)
     bibtex = Column(String)
     title = Column(String)
-    citation_count = Column(Integer)
     abstract = Column(String)
-    text = Column(String)
+    vec = Column(String)
     pub = Column(String)
     year = Column(Integer)
     categories = Column(String)
@@ -192,14 +153,24 @@ class ARXIVEntry(Base, DatabaseObject):
 
     @staticmethod
     def keys():
-        return ['id', 'bibcode', 'bibtex', 'title', 'citation_count', 'abstract', \
-        'text', 'pub', 'year', 'categories', 'doi']
+        return ['id', 'bibcode', 'bibtex', 'title', 'abstract', \
+                'vec', 'pub', 'year', 'categories', 'doi']
+
+class PAPERembedding(Base, DatabaseObject):
+    __tablename__ = "paper_embeddings"
+
+    # define columns of table
+    id = Column(Integer, autoincrement=True)
+    bibcode = Column(String, primary_key=True)
+    embedding = Column(String)
+
+    @staticmethod
+    def keys():
+        return ['id', 'bibcode', 'embedding']
 
 ##############################
 
 if __name__ == "__main__":
-    settings = json.load(open('settings.json', 'r'))
-
     # migrate table
     # dbOLD = Database( settings=settings['database'], dtype=OldEntry)
     # dbNEW = Database( settings=settings['database'], dtype=ADSEntry)
@@ -216,7 +187,7 @@ if __name__ == "__main__":
     # dude()
 
     # create new table
-    dbNEW = Database( settings=settings['database'], dtype=ARXIVEntry)
+    dbNEW = Database.load('settings.json', dtype=PAPERentry)
 
     if not database_exists(dbNEW.engine.url):
         create_database(dbNEW.engine.url)

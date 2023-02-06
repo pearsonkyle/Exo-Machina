@@ -10,7 +10,7 @@ from spacy.lang.en.stop_words import STOP_WORDS
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from database import Database, ADSEntry
+from database import Database, PAPERentry
 
 # use tokenizer from spacy trained on sci corpus
 parser = spacy.load("en_core_sci_sm",disable=["ner"])
@@ -37,11 +37,12 @@ def parse_args():
 if __name__ == '__main__':
 
     args = parse_args()
-    settings = json.load(open(args.settings, 'r'))
-    ADSDatabase = Database( settings=settings['database'], dtype=ADSEntry )
+
+    # load database
+    db = Database.load('settings.json', dtype=PAPERentry)
 
     # load text data
-    entrys = ADSDatabase.session.query(ADSEntry).order_by(ADSEntry.id).all()
+    entrys = db.session.query(PAPERentry).order_by(PAPERentry.id).all()
     abstracts = [entry.abstract for entry in entrys]
     processed_abstracts = [entry.text for entry in entrys]
 
@@ -55,7 +56,7 @@ if __name__ == '__main__':
         entrys[i].id = i # reset id in database
 
     # save new IDs to database
-    ADSDatabase.session.commit()
+    PAPERentry.session.commit()
 
     # ranks words by importance/occurence
     # The maximum number of features will be the maximum number of unique words

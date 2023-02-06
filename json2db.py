@@ -1,6 +1,6 @@
 import json
 from tqdm import tqdm
-from database import ARXIVEntry, Database
+from database import PAPERentry, Database
 
 def clean_text(text):
     return text.replace('\n', ' ').replace('  ', ' ').strip()
@@ -161,11 +161,11 @@ category_map = {'astro-ph': 'Astrophysics',
 'stat.TH': 'Statistics Theory'}
 
 if __name__ == "__main__":
-    settings = json.load(open('settings.json', 'r'))
-    db = Database( settings=settings['database'], dtype=ARXIVEntry)
+    # load database
+    db = Database.load('settings.json', dtype=PAPERentry)
 
     # load arxiv data from https://www.kaggle.com/datasets/Cornell-University/arxiv
-    arxiv = 'arxiv-metadata-oai-snapshot.json'
+    arxiv = 'D:\\Datasets\\arxiv\\arxiv-metadata-oai-snapshot.json'
 
     # loop through file line by line
     with open(arxiv, 'r') as f:
@@ -179,7 +179,7 @@ if __name__ == "__main__":
             # dict_keys(['id', 'submitter', 'authors', 'title', 'comments', 'journal-ref', 'doi', 'report-no', 'categories', 'license', 'abstract', 'versions', 'update_date', 'authors_parsed'])
 
             # create new entry
-            entry = ARXIVEntry()
+            entry = PAPERentry()
             # set attributes
             entry.id = i
             entry.bibcode = data['id']
@@ -199,7 +199,7 @@ if __name__ == "__main__":
                     entry.categories += cat + ','
 
             # check for bibcode
-            checkval = db.exists(ARXIVEntry.bibcode,entry.bibcode)
+            checkval = db.exists(PAPERentry.bibcode,entry.bibcode)
             if not checkval:
                 # add to database
                 db.session.add(entry)

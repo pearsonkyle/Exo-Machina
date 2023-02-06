@@ -1,15 +1,19 @@
-from transformers import GPT2LMHeadModel, GPT2Tokenizer, pipeline
+from transformers import GPT2LMHeadModel, GPT2TokenizerFast, pipeline
 import torch
 
 """Test a checkpoint """
 
-tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-model = GPT2LMHeadModel.from_pretrained("./gpt2-exomachina/checkpoint-300000", pad_token_id=tokenizer.eos_token_id)
+tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+model = GPT2LMHeadModel.from_pretrained("pearsonkyle/gpt2-arxiv", pad_token_id=tokenizer.eos_token_id)
 prompt = "The surface of Mars is"
 
 # generate text
 nlp = pipeline('text-generation', model=model, tokenizer=tokenizer)
-texts = nlp(prompt, max_length=50, do_sample=True, penalty_alpha=0.7, top_k=4, num_return_sequences=3)
+
+texts = nlp("Directly imaged exoplanets probe", 
+             max_length=50, do_sample=True, num_return_sequences=3, 
+             penalty_alpha=0.65, top_k=25, repetition_penalty=1.25,
+             temperature=0.9)
 
 for text in texts:
     print(text['generated_text']+"\n")
@@ -22,6 +26,7 @@ for text in texts:
 
     # get the last embedding (768 for GPT-2)
     last_embedding = embedding[0][-1]
+
 
     # get the embedding for the prompt
     prompt_embedding = embedding[0][0]
