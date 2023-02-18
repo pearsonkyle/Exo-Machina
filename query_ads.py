@@ -2,7 +2,7 @@ import os
 import ads
 import argparse
 
-from database import Database, PAPERentry
+from database import Database, PaperEntry
 
 ads.config.token = os.environ.get('ADS_TOKEN', 'EGKettNZn6Doq1cCPH8yBmFFEcwmczCSknbPZBji')
 
@@ -23,7 +23,7 @@ def parse_args():
 
     return parser.parse_args()
 
-def format_entry(response):
+def format_entry(response, query):
 
     # create entry
     data = {}
@@ -36,6 +36,7 @@ def format_entry(response):
 
     # format
     data['year'] = int(data['year'])
+    data['categories'] = query
     return data
 
 
@@ -45,7 +46,7 @@ if __name__ == '__main__':
 
     #settings = json.load(open(args.settings, 'r'))
     #ADSDatabase = Database( settings=settings["database"], dtype=ADSEntry )
-    db = Database.load('settings.json', dtype=PAPERentry)
+    db = Database.load('settings.json', dtype=PaperEntry)
 
     # initial query
     papers = ads.SearchQuery(
@@ -60,17 +61,17 @@ if __name__ == '__main__':
     bibcodes = []
     # add papers to db
     for paper in papers:
-        data = format_entry(paper)
+        data = format_entry(paper, args.query)
 
         # check that value doesn't exist
-        checkval = db.exists(PAPERentry.bibcode,paper.bibcode)
+        checkval = db.exists(PaperEntry.bibcode,paper.bibcode)
         if not checkval:
-            db.insert( PAPERentry(**data))
+            db.insert( PaperEntry(**data))
             print(data['title'], data['bibcode'])
             bibcodes.append(data['bibcode'])
 
     # query db for all bibcodes
-    #bibcodes = db.session.query(PAPERentry.bibcode).order_by(-PAPERentry.year).all()
+    #bibcodes = db.session.query(PaperEntry.bibcode).order_by(-PaperEntry.year).all()
     print('Total DB Entries:', db.count)
 
     # get each papers references
@@ -86,12 +87,12 @@ if __name__ == '__main__':
 
         # add papers to db
         for paper in papers:
-            data = format_entry(paper)
+            data = format_entry(paper, args.query)
 
             # check that value doesn't exist
-            checkval = db.exists(PAPERentry.bibcode,paper.bibcode)
+            checkval = db.exists(PaperEntry.bibcode,paper.bibcode)
             if not checkval: 
-                db.session.add( PAPERentry(**data))
+                db.session.add( PaperEntry(**data))
                 db.session.commit()
                 print(paper.title, paper.bibcode)
 

@@ -4,7 +4,7 @@ from tqdm import tqdm
 import ftfy
 from cleantext import clean
 
-from database import Database, PAPERentry
+from database import Database, PaperEntry
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -25,10 +25,10 @@ if __name__ == '__main__':
     args = parse_args()
 
     # load database
-    DB = Database.load('settings.json', dtype=PAPERentry)
+    DB = Database.load('settings.json', dtype=PaperEntry)
 
     print(f'querying database... ({DB.count} entries)')
-    entrys = DB.session.query(PAPERentry.title,PAPERentry.abstract,PAPERentry.bibcode).all()
+    entrys = DB.session.query(PaperEntry.title,PaperEntry.abstract,PaperEntry.bibcode).all()
 
     # randomize the order of the abstracts
     random.shuffle(entrys)
@@ -131,21 +131,28 @@ if __name__ == '__main__':
             abstr = clean(abstr)
 
             # write abstract to file
-            if len(abstr)>100:
-                try:
+            if len(abstr)>100 and len(abstr.split(' '))>20:
+                try: 
                     f.write(abstr + '\n')
 
                     # replace entry in database with cleaned up version
-                    #DB.session.query(PAPERentry).filter(PAPERentry.bibcode==bibcode).update({PAPERentry.abstract:abstr})
+                    DB.session.query(PaperEntry).filter(PaperEntry.bibcode==bibcode).update({PaperEntry.abstract:abstr})
+
                 except Exception as ex:
-                    continue
-                #    exceptions.append((bibcode, ex))
+                    exceptions.append((bibcode, ex))
 
                     # delete entry from database
-                    #DB.session.query(PAPERentry).filter(PAPERentry.bibcode==bibcode).delete()
+                    DB.session.query(PaperEntry).filter(PaperEntry.bibcode==bibcode).delete()
+                    continue
+            else:
+                # delete entry from database
+                DB.session.query(PaperEntry).filter(PaperEntry.bibcode==bibcode).delete()
 
     print(f"Exceptions: {len(exceptions)}")
 
     # commit changes to database
-    #DB.session.commit()
+    DB.session.commit()
     DB.close()
+
+    # print count
+    print(f"Count: {DB.count}")

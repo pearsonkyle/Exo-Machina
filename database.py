@@ -136,7 +136,7 @@ class Database():
         return Database(settings=settings, dtype=dtype)
 
 
-class PAPERentry(Base, DatabaseObject):
+class PaperEntry(Base, DatabaseObject):
     __tablename__ = "papers"
 
     # define columns of table
@@ -144,29 +144,18 @@ class PAPERentry(Base, DatabaseObject):
     bibcode = Column(String, primary_key=True)
     bibtex = Column(String)
     title = Column(String)
-    abstract = Column(String)
-    vec = Column(String)
+    abstract = Column(String)    # abstract text
+    vec = Column(String)         # vectorized abstract
+    text = Column(String)        # either full text or tokenized abstract
+    categories = Column(String)  # list of categories
     pub = Column(String)
     year = Column(Integer)
-    categories = Column(String)
     doi = Column(String)
 
     @staticmethod
     def keys():
         return ['id', 'bibcode', 'bibtex', 'title', 'abstract', \
                 'vec', 'pub', 'year', 'categories', 'doi']
-
-class PAPERembedding(Base, DatabaseObject):
-    __tablename__ = "paper_embeddings"
-
-    # define columns of table
-    id = Column(Integer, autoincrement=True)
-    bibcode = Column(String, primary_key=True)
-    embedding = Column(String)
-
-    @staticmethod
-    def keys():
-        return ['id', 'bibcode', 'embedding']
 
 ##############################
 
@@ -187,7 +176,7 @@ if __name__ == "__main__":
     # dude()
 
     # create new table
-    dbNEW = Database.load('settings.json', dtype=PAPERentry)
+    dbNEW = Database.load('settings.json', dtype=PaperEntry)
 
     if not database_exists(dbNEW.engine.url):
         create_database(dbNEW.engine.url)
@@ -197,7 +186,7 @@ if __name__ == "__main__":
         create_database(dbNEW.engine.url)
         print("created")
 
-    print(database_exists(dbNEW.engine.url))
+    print("checking existence:", database_exists(dbNEW.engine.url))
 
     dbNEW.dtype.__table__.create(dbNEW.engine)
     print("Number of entries:",dbNEW.count)

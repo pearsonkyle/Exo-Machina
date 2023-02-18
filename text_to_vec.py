@@ -10,13 +10,15 @@ from spacy.lang.en.stop_words import STOP_WORDS
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from database import Database, PAPERentry
+from database import Database, PaperEntry
 
 # use tokenizer from spacy trained on sci corpus
+spacy.prefer_gpu()
 parser = spacy.load("en_core_sci_sm",disable=["ner"])
 parser.max_length = 7000000
 punctuations = string.punctuation
 stopwords = list(STOP_WORDS)
+spacy.prefer_gpu()
 
 def spacy_tokenizer(sentence):
     # not good for text generation - only use for embedding
@@ -39,24 +41,26 @@ if __name__ == '__main__':
     args = parse_args()
 
     # load database
-    db = Database.load('settings.json', dtype=PAPERentry)
+    db = Database.load('settings.json', dtype=PaperEntry)
+    print('querying database...')
 
-    # load text data
-    entrys = db.session.query(PAPERentry).order_by(PAPERentry.id).all()
+    # get all abstracts
+    entrys = db.session.query(PaperEntry.title,PaperEntry.abstract,PaperEntry.bibcode).all()
     abstracts = [entry.abstract for entry in entrys]
-    processed_abstracts = [entry.text for entry in entrys]
+    processed_abstracts = []
 
-    # prep data
-    for i in tqdm(range(len(abstracts))):
-        # process if need be, takes ~40 min for 100k abstracts
-        if entrys[i].text == "":
-            # tokenize text
-            processed_abstracts[i] = spacy_tokenizer(abstracts[i])
-            entrys[i].text = processed_abstracts[i]
-        entrys[i].id = i # reset id in database
+    # write processed abstracts to file
+    with open('processed_abstracts.txt','w') as f:
+
+        # prep data
+        for i in tqdm(range(len(abstracts))):
+            # process if need be, takes ~40 min for 100k abstracts
+            processed_abstracts.append( spacy_tokenizer(abstracts[i]))
+            f.write(processed_abstracts[i] + '\n')
+            # TODO add to text section of entry in db, then check upon load if already processed
 
     # save new IDs to database
-    PAPERentry.session.commit()
+    # PaperEntry.session.commit()
 
     # ranks words by importance/occurence
     # The maximum number of features will be the maximum number of unique words

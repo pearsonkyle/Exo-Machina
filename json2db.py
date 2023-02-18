@@ -1,6 +1,6 @@
 import json
 from tqdm import tqdm
-from database import PAPERentry, Database
+from database import PaperEntry, Database
 
 def clean_text(text):
     return text.replace('\n', ' ').replace('  ', ' ').strip()
@@ -162,7 +162,7 @@ category_map = {'astro-ph': 'Astrophysics',
 
 if __name__ == "__main__":
     # load database
-    db = Database.load('settings.json', dtype=PAPERentry)
+    db = Database.load('settings.json', dtype=PaperEntry)
 
     # load arxiv data from https://www.kaggle.com/datasets/Cornell-University/arxiv
     arxiv = 'D:\\Datasets\\arxiv\\arxiv-metadata-oai-snapshot.json'
@@ -179,7 +179,7 @@ if __name__ == "__main__":
             # dict_keys(['id', 'submitter', 'authors', 'title', 'comments', 'journal-ref', 'doi', 'report-no', 'categories', 'license', 'abstract', 'versions', 'update_date', 'authors_parsed'])
 
             # create new entry
-            entry = PAPERentry()
+            entry = PaperEntry()
             # set attributes
             entry.id = i
             entry.bibcode = data['id']
@@ -199,7 +199,7 @@ if __name__ == "__main__":
                     entry.categories += cat + ','
 
             # check for bibcode
-            checkval = db.exists(PAPERentry.bibcode,entry.bibcode)
+            checkval = db.exists(PaperEntry.bibcode,entry.bibcode)
             if not checkval:
                 # add to database
                 db.session.add(entry)

@@ -1,4 +1,4 @@
-A deep language model, GPT-2, is trained on scientific manuscripts from [ArXiv](https://arxiv.org/). This pilot study uses abstracts from ~1.6M articles as training data in order to explore correlations in scientific literature from a language modelling perspective. A language models are algorithms used to generate sequences of numers that correspond to tokens or words and can be used to represent sentances. The text samples are fed into the [GPT-2](https://openai.com/blog/better-language-models/) 117M and 774M model and trained for ~500,000 steps with fine tuning. After training, the language model is used to generate embeddings for each manuscript which can be clustered for visualization applications and queried for entity searches.
+A deep language model, GPT-2, is trained on scientific manuscripts from [ArXiv](https://arxiv.org/). This pilot study uses abstracts from ~2.1M articles as training data in order to explore correlations in scientific literature from a language modelling perspective. A language models are algorithms used to generate sequences of numers that correspond to tokens or words and can be used to represent sentances. The text samples are fed into the [GPT-2](https://openai.com/blog/better-language-models/) 117M and 774M model and trained for ~500,000 steps with fine tuning. After training, the language model is used to generate embeddings for each manuscript which can be clustered for visualization applications and queried for entity searches.
 
 - ### [View on Hugging Face API](https://huggingface.co/pearsonkyle/gpt2-arxiv?text=We+can+remotely+sense+an+atmosphere+by+observing+its+reflected%2C+transmitted%2C+or+emitted+light+in+varying+geometries.+This+light+will+contain+information+on+the+planetary+conditions+including)
 
@@ -57,7 +57,7 @@ Use [NASA's Astrophysical Database](https://ui.adsabs.harvard.edu/) (ADS) to add
 ## Train on a custom dataset
 Train a language model using the commands below:
 
-1. `python db2txt.py` to create a text file with one abstract per line
+1. `python db2txt.py` to create a text file with one abstract per line, this script will also clean up various characters in the abstracts
 2. `python train.py` to train a GPT-2 model
 
 Interested in training this model in the cloud? Try this repo on [Google Colab](https://colab.research.google.com/drive/1Pur0rFi5YVdn7axYRacXWFMic4NxRexV?usp=sharing)
@@ -66,8 +66,14 @@ Interested in training this model in the cloud? Try this repo on [Google Colab](
 
 A language model is used to generate encodings for each manuscript which can be clustered for visualization applications and queried for entity searches. The embeddings are generated from the [SciBERT](https://github.com/allenai/scibert) model. The embeddings are then clustered using an approximate nearest neighbor technique (ANNOY) and queried with FAISS to provide recommendations on similar articles to an input prompt.
 
-1. `python db2embedding.py` to use create a vector for each abstract in db using SciBERT embedding
-2. `python db2annoy.py` to create an approximate nearest neighbor tree
+1. `python db2embedding.py` to use create a vector for each abstract in db using an embedding from the [SciBERT](https://huggingface.co/allenai/scibert_scivocab_uncased) model.
+2. `python db2annoy.py` to create an [approximate nearest neighbor](https://github.com/spotify/annoy) tree
+3. `python eval_nearest.py` 
+
+or 
+
+1. `python text_to_vec.py` to create vectors based on TF-IDF and PCA
+
 
 ## RESTful API
 
