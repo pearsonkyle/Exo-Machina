@@ -73,6 +73,7 @@ A language model is used to generate encodings for each manuscript which can be 
 or 
 
 1. `python text_to_vec.py` to create vectors based on TF-IDF and PCA
+2. `python eval_tfidf.py`
 
 
 ## RESTful API

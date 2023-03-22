@@ -4,12 +4,54 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, desc
 from sqlalchemy.sql import text, exists
 from sqlalchemy_utils import database_exists, create_database, drop_database
+from annoy import AnnoyIndex
+import spacy
+import string
+import pickle
+from spacy.lang.en.stop_words import STOP_WORDS
+from sklearn.decomposition import PCA
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 from datetime import datetime
 import json
 
-Base = declarative_base() 
 
+# use tokenizer from spacy trained on sci corpus
+spacy.prefer_gpu()
+parser = spacy.load("en_core_sci_sm",disable=["ner"])
+parser.max_length = 7000000
+punctuations = string.punctuation
+stopwords = list(STOP_WORDS)
+spacy.prefer_gpu()
+
+def spacy_tokenizer(sentence):
+    # not good for text generation - only use for embedding
+    mytokens = parser(sentence)
+    mytokens = [ word.lemma_.lower().strip() if word.lemma_ != "-PRON-" else word.lower_ for word in mytokens ]
+    mytokens = [ word for word in mytokens if word not in stopwords and word not in punctuations ]
+    mytokens = " ".join([i for i in mytokens])
+    return mytokens
+
+class NearestNeighborSearch():
+    """
+    A class to perform nearest neighbor search on a vectorized text corpus. The pipeline includes 
+    tokenization, tfidf vectorization, PCA dimensionality reduction, and cosine similarity.
+    """
+
+    def __init__(self, vectorizer_path, pca_path, nn_path ):
+        self.vectorizer = pickle.load(open(vectorizer_path, "rb"))
+        self.pca = pickle.load(open(pca_path, "rb"))
+        self.nn = AnnoyIndex(self.pca.n_components_, 'angular')
+        self.nn.load(nn_path)
+        # lambda function to process input
+        self.process_input = lambda x: self.pca.transform(self.vectorizer.transform([spacy_tokenizer(x)]).toarray())[0]
+
+    def __call__(self, text, n=10):
+        # returns list of indices of nearest neighbors
+        return self.nn.get_nns_by_vector(self.process_input(text), n, search_k=-1, include_distances=False)
+
+
+Base = declarative_base() 
 
 class DatabaseObject():
     # some helpful functions    
@@ -42,9 +84,10 @@ class DatabaseObject():
 
 class Database():
 
-    def __init__(self, settings=None, dtype=None):
+    def __init__(self, settings=None, dtype=None, SearchFunction=None):
         self.settings = settings
         self.dtype = dtype
+        self.SearchFunction = SearchFunction
         self.create_session()
     
     def create_session(self):
@@ -96,6 +139,15 @@ class Database():
     def query(self, *args, count=10):
         return self.session.query(self.dtype).filter(*args).limit(count).all()
 
+    def search(self, text, count=10):
+        """
+        Nearest neighbor search
+        """
+        ids = self.SearchFunction(text)
+        # get entries from database
+        # entrys = db.session.query(PaperEntry.title,PaperEntry.abstract,PaperEntry.bibcode).filter(PaperEntry.id.in_(vecs)).all()
+        return self.session.query(self.dtype).filter(self.dtype.id.in_(ids)).all()
+
     @property
     @_check_session
     def session(self):
@@ -124,16 +176,20 @@ class Database():
     
     def close(self):
         self.session.close()
-    
-    def query(self,*args, count=10):
-        return self.session.query(self.dtype).filter(*args).limit(count).all()
 
     @staticmethod
-    def load(filename, dtype, key='database'):
+    def load(filename, dtype, nearest_neighbor_search=False):
         # load database settings from json file
         with open(filename,'r') as f:
-            settings = json.load(f)[key]
-        return Database(settings=settings, dtype=dtype)
+            settings = json.load(f)
+
+        # default to false cus loading takes a min each time
+        if nearest_neighbor_search:
+            nnsearch = NearestNeighborSearch(settings['vectorizer_path'], settings['pca_path'], settings['annoy_path'])
+        else:
+            nnsearch = None
+
+        return Database(settings=settings['database'], dtype=dtype, SearchFunction=nnsearch)
 
 
 class PaperEntry(Base, DatabaseObject):

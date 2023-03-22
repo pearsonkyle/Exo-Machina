@@ -6,5 +6,8 @@
         "endpoint":"",
         "port":"",
         "dbname":"whitepapers.db"
-    }
+    },
+    "vectorizer_path":"vectorizer.pkl",
+    "pca_path": "pca_1200.pkl",
+    "annoy_path": "tfdif+pca_1200.ann"
 }

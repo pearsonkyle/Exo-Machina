@@ -5,32 +5,21 @@ from typing import List
 
 from transformers import pipeline
 from transformers import GPT2TokenizerFast
-from transformers import AutoTokenizer, OPTForCausalLM
 
+from database import Database, PaperEntry
 
-# load model
+# load model for predictive keyboard
 tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 llm = pipeline('text-generation',model='pearsonkyle/gpt2-arxiv', tokenizer=tokenizer)
 
-#tokenizer = AutoTokenizer.from_pretrained("facebook/galactica-125m")
-#llm = pipeline('text-generation',model='facebook/galactica-125m', tokenizer=tokenizer)
+# load database + stuff for nearest neighbor search
+db = Database.load('settings.json', dtype=PaperEntry, nearest_neighbor_search=True)
 
+# query all entries and load into memory for fast access
+print('querying database...')
+entrys = db.session.query(PaperEntry.title,PaperEntry.abstract,PaperEntry.bibcode).all()
 
-# class to store the current model, tokenizer, and pipeline
-class Prompter:
-    def __init__(self, model_name, tokenizer_name):
-        self.tokenizer = GPT2TokenizerFast.from_pretrained(tokenizer_name)
-        self.llm = pipeline('text-generation',model=model_name, tokenizer=self.tokenizer)
-
-    def load(self, model_name, tokenizer_name):
-        self.tokenizer = GPT2TokenizerFast.from_pretrained(tokenizer_name)
-        self.llm = pipeline('text-generation',model=model_name, tokenizer=self.tokenizer)
-
-    def prompt(self, prompt, temperature=0.9, max_length=100, do_sample=True, penalty_alpha=0.65, top_k=40, top_p=0.95, num_return_sequences=5, repetition_penalty=1.15):
-        texts = self.llm(prompt, temperature=temperature, max_length=max_length, do_sample=do_sample, penalty_alpha=penalty_alpha, top_k=top_k, top_p=top_p, num_return_sequences=num_return_sequences, repetition_penalty=repetition_penalty)
-        return texts
-
-
+# set up fastapi app
 app = FastAPI(title="Prompter", description="GPT powered prediction",
     version="0.1.0",
     terms_of_service="",
@@ -48,15 +37,15 @@ app = FastAPI(title="Prompter", description="GPT powered prediction",
 class PromptInput(BaseModel):
     # hugging face prompt and parameters
     prompt: str = "test"
-    temperature: float = 0.85
+    temperature: float = 0.75
     max_tokens: int = 40    # max length of context for generation
     extra_tokens: int = 10  # number of extra tokens to generate
     do_sample: bool = True
     penalty_alpha: float = 0.65
     top_k: int = 40
-    top_p: float = 0.5
+    top_p: float = 0.75
     num_return_sequences: int = 4
-    repetition_penalty: float = 1.25
+    repetition_penalty: float = 1.15
     replace_prompt: bool = True
 
 class PromptList(BaseModel):
@@ -64,11 +53,24 @@ class PromptList(BaseModel):
     prompts: List[str]
     # TODO: add more info, link back to input?
 
+class SearchInput(BaseModel):
+    # search parameters
+    query: str
+    num_results: int = 10
+
+class Paper(BaseModel):
+    # paper info
+    title: str
+    abstract: str
+    bibcode: str
+
+class PaperList(BaseModel):
+    # response to user
+    papers: List[Paper]
 
 #@app.get("/")
 #def read_root():
 #    return RedirectResponse(url="/docs")
-
 
 @app.post("/predict")
 def predict(prompt_input: PromptInput):
@@ -100,6 +102,13 @@ def predict(prompt_input: PromptInput):
     
     return PromptList(prompts=prompt_list)
 
-
+@app.post("/search")
+def search(search_input: SearchInput):
+    # search database for nearest neighbors
+    #papers = db.search(search_input.query, search_input.num_results)
+    ids = db.SearchFunction(search_input.query, search_input.num_results)
+    # entrys is a list of tuples (title, abstract, bibcode)
+    papers = [Paper(title=entrys[i][0], abstract=entrys[i][1], bibcode=entrys[i][2]) for i in ids]
+    return PaperList(papers=papers)
 
 # uvicorn api:app --reload
