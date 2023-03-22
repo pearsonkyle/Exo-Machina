@@ -57,7 +57,7 @@ class NearestNeighborSearch():
         # returns list of indices of nearest neighbors
         return self.nn.get_nns_by_vector(self.process_input(text), 10, search_k=-1, include_distances=False)
 
-    def train(self, text):
+    def train(self, text): # TODO finish training fn
         # vectorize text
         X = self.vectorizer.fit_transform(text)
         # reduce dimensionality
