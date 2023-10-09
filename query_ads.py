@@ -4,7 +4,7 @@ import argparse
 
 from database import Database, PaperEntry
 
-ads.config.token = os.environ.get('ADS_TOKEN', 'EGKettNZn6Doq1cCPH8yBmFFEcwmczCSknbPZBji')
+ads.config.token = os.environ.get('ADS_DEV_KEY')
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -18,8 +18,8 @@ def parse_args():
     help_ = "Max pages"
     parser.add_argument("-m", "--max_pages", help=help_, default=15, type=int)
 
-    help_ = "Sort based on (citation_count, year, bibcode)"
-    parser.add_argument("-o", "--sort", help=help_, default="citation_count", type=str)
+    help_ = "Sort based on (score, citation_count, year, bibcode)"
+    parser.add_argument("-o", "--sort", help=help_, default="score", type=str)
 
     return parser.parse_args()
 
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     papers = ads.SearchQuery(
         q=args.query, 
         fl=[
-            'title', 'abstract', 
+            'title', 'abstract', 'bibtex',
             'pub', 'year', 'keyword','bibcode'
         ],
         sort=args.sort, max_pages=args.max_pages
@@ -62,6 +62,14 @@ if __name__ == '__main__':
     # add papers to db
     for paper in papers:
         data = format_entry(paper, args.query)
+
+        # skip if abstract is none
+        if data['abstract'] is None:
+            continue
+
+        # check if query is in abstract or title
+        if args.query not in data['abstract']:
+            continue
 
         # check that value doesn't exist
         checkval = db.exists(PaperEntry.bibcode,paper.bibcode)
@@ -79,8 +87,8 @@ if __name__ == '__main__':
         papers = ads.SearchQuery(
             q="references(bibcode:{})".format(bibcode), 
             fl=[
-                'title', 'citation_count', 'abstract', 
-                'pub', 'year', 'keyword','bibcode', 'identifier'
+                'title', 'abstract', 'bibtex',
+                'pub', 'year', 'keyword', 'bibcode'
             ],
             sort=args.sort, max_pages=args.max_pages
         )
@@ -89,12 +97,19 @@ if __name__ == '__main__':
         for paper in papers:
             data = format_entry(paper, args.query)
 
+            # skip if abstract is none
+            if data['abstract'] is None:
+                continue
+
             # check that value doesn't exist
             checkval = db.exists(PaperEntry.bibcode,paper.bibcode)
             if not checkval: 
                 db.session.add( PaperEntry(**data))
                 db.session.commit()
                 print(paper.title, paper.bibcode)
+
+    # TODO have it clean up the special character, gt, lt, sup, sub, etc.
+    # TODO add another script to query Exoplanet.EU for planet references
 
     '''fields
     paper.abstract              paper.build_citation_tree   paper.first_author_norm     paper.keys                  paper.pubdate

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Float, Integer, String, ForeignKey
+from sqlalchemy import Column, DateTime, Float, Integer, String, ForeignKey, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, desc
@@ -8,6 +8,7 @@ from annoy import AnnoyIndex
 import spacy
 import string
 import pickle
+#python -m spacy download en_core_web_sm
 from spacy.lang.en.stop_words import STOP_WORDS
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -17,12 +18,10 @@ import json
 
 
 # use tokenizer from spacy trained on sci corpus
-spacy.prefer_gpu()
 parser = spacy.load("en_core_sci_sm",disable=["ner"])
 parser.max_length = 7000000
 punctuations = string.punctuation
 stopwords = list(STOP_WORDS)
-spacy.prefer_gpu()
 
 def spacy_tokenizer(sentence):
     # not good for text generation - only use for embedding
@@ -31,25 +30,6 @@ def spacy_tokenizer(sentence):
     mytokens = [ word for word in mytokens if word not in stopwords and word not in punctuations ]
     mytokens = " ".join([i for i in mytokens])
     return mytokens
-
-class NearestNeighborSearch():
-    """
-    A class to perform nearest neighbor search on a vectorized text corpus. The pipeline includes 
-    tokenization, tfidf vectorization, PCA dimensionality reduction, and cosine similarity.
-    """
-
-    def __init__(self, vectorizer_path, pca_path, nn_path ):
-        self.vectorizer = pickle.load(open(vectorizer_path, "rb"))
-        self.pca = pickle.load(open(pca_path, "rb"))
-        self.nn = AnnoyIndex(self.pca.n_components_, 'angular')
-        self.nn.load(nn_path)
-        # lambda function to process input
-        self.process_input = lambda x: self.pca.transform(self.vectorizer.transform([spacy_tokenizer(x)]).toarray())[0]
-
-    def __call__(self, text, n=10):
-        # returns list of indices of nearest neighbors
-        return self.nn.get_nns_by_vector(self.process_input(text), n, search_k=-1, include_distances=False)
-
 
 Base = declarative_base() 
 
@@ -198,20 +178,23 @@ class PaperEntry(Base, DatabaseObject):
     # define columns of table
     id = Column(Integer, autoincrement=True)
     bibcode = Column(String, primary_key=True)
-    bibtex = Column(String)
+    bibtex = Column(String)               # bibtex entry
     title = Column(String)
-    abstract = Column(String)    # abstract text
-    vec = Column(String)         # vectorized abstract
-    text = Column(String)        # either full text or tokenized abstract
-    categories = Column(String)  # list of categories
     pub = Column(String)
     year = Column(Integer)
-    doi = Column(String)
+    abstract = Column(String)             # abstract text
+    abstract_embedding = Column(String)   # abstract embedding
+    abstract_processed = Column(String)   # tokenized abstract for tfidf
+    text = Column(String)                 # full text
+    text_embedding = Column(String)       # full text embedding
+    text_processed = Column(String)       # tokenized full text for tfidf
+    categories = Column(String)           # list of categories
 
     @staticmethod
     def keys():
-        return ['id', 'bibcode', 'bibtex', 'title', 'abstract', \
-                'vec', 'pub', 'year', 'categories', 'doi']
+        return ['id', 'bibcode', 'bibtex', 'title', 'pub', 'year', 'categories', \
+                'abstract', 'abstract_embedding', 'abstract_processed', \
+                'text', 'text_embedding', 'text_processed']
 
 ##############################
 
@@ -249,6 +232,8 @@ if __name__ == "__main__":
     #dtype.__table__.drop(dbNEW.engine)
 
     '''
+    # example of using sqlalchemy to add to database
+
     for i in range(5):
         data = {
                 'timestamp':datetime.utcnow(),
