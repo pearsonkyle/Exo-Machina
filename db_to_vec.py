@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
             # update id + text in database
             db.session.query(PaperEntry).filter(PaperEntry.bibcode == entrys[i].bibcode).update({
-                PaperEntry.id: len(processed_abstracts)-1,
+                PaperEntry.id: i,
                 PaperEntry.abstract_processed: processed_abstracts[i]
             })
 
@@ -164,5 +164,3 @@ if __name__ == '__main__':
     # for i in vecs:
     #     entry = db.session.query(PaperEntry).filter(PaperEntry.id == i).first()
     #     print(entry.bibcode,entry.title,entry.abstract)
-
-    # TODO move all this to database.py?

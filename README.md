@@ -2,39 +2,44 @@ A semantic search engine for manuscript on the ArXiv. Semantic search means that
 
 ## Dependencies
 
-- Create a new virtual environment (e.g. `conda create -n nlp python=3.9`)
-- Activate the environment `conda activate nlp`
-- Install [pytorch](https://pytorch.org/get-started/locally/)
-    - `conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia nmslib`
-    - `conda install -c conda-forge spacy`
-    - `https://github.com/allenai/scispacy`
-    - `pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.1/en_core_sci_sm-0.5.1.tar.gz`
+Create a new virtual environment 
 
-- `pip install transformers sqlalchemy sqlalchemy_utils pyuser_agent tqdm ipython jupyter datasets ftfy clean-text unidecode`
+    conda create -n nlp python=3.11
+    conda activate nlp
+    
+Install dependencies 
+    
+    conda install -c conda-forge spacy
+    
+    pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.1/en_core_sci_sm-0.5.1.tar.gz
 
-Make sure sqlalchemy is at a version < 2.0
+    pip install transformers sqlalchemy sqlalchemy_utils pyuser_agent tqdm ipython jupyter datasets ftfy clean-text unidecode annoy scikit-learn ads
 
-## Training data
+Check out the file: [requirements.txt]() for a list of dependencies and versions
 
-1. ~2.3 million abstracts from the [Arxiv](https://arxiv.org/) that you can download on [Kaggle](https://www.kaggle.com/datasets/Cornell-University/arxiv).
-2. Additionally, we include a script to query [NASA Astrophysical Database](https://ui.adsabs.harvard.edu/)
+## Set up + Database
 
-These data are converted include a SQL database which can be sorted and queried in a quick manner allowing for the easy export of training datasets
+1. Create a SQL database to store articles in: 
 
-## Set up
+    `python database.py`
 
-1. Download the [Arxiv dataset](https://www.kaggle.com/datasets/Cornell-University/arxiv) from Kaggle
-2. `unzip arxiv-metadata-oai-snapshot.json.zip`
-3. `python database.py` to create sql database
-4. `python json2db.py` to populate the db with json data from arxiv (inspect script to filter out categories)
-5. `python clean_db.py` to remove entries based on keywords in the abstract
-5. `python db_to_vec.py` create embeddings with tfidf+PCA
+2. Populate the databasae
 
-## Adding to the database
+    a. Download ~2.3 million abstracts from the [Arxiv](https://arxiv.org/) on [Kaggle](https://www.kaggle.com/datasets/Cornell-University/arxiv). After downloading and unzip, run the script: `json2db.py`. Specific categories can be selected by editing the `category_map` dict in the script.
 
-Use [NASA's Astrophysical Database](https://ui.adsabs.harvard.edu/) (ADS) to add more abstracts to the database based on a keyword search. See `query_ads.py -h` for more details. You will need to sign up for an account on ADS and subscribe for an API key.
+    b. Or, use our query script for manuscripts in [NASA Astrophysical Database](https://ui.adsabs.harvard.edu/). Query the database for abstracts based on a keyword search. See `query_ads.py -h` for more details. You will need to sign up for an account on ADS and subscribe for an API key.
 
-1. `python query_ads.py -q "transiting exoplanets"` to add entries
+These data are added to a SQL database called `whitepapers.db` which can be sorted and queried in a quick manner using SQL commands or with our SQL wrapper in `database.py`.
+
+3. Remove incomplete entries, convert special characters and remove abstracts based on keywords to clean up the database. 
+    
+    `python clean_db.py` 
+
+4. Create embeddings and set up an approximate nearest neighbor tree for the database. 
+
+    `python db_to_vec.py`
+
+    We use two different algorithms to generate embeddings, the first is a TF-IDF vectorizer with PCA dimensionality reduction and the second is a language model, SciBERT, which is a BERT model trained on scientific text. The embeddings are then clustered using an approximate nearest neighbor technique (ANNOY) and queried with FAISS to provide recommendations on similar articles to an input prompt.
 
 ## Embeddings
 

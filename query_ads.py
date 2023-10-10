@@ -18,6 +18,9 @@ def parse_args():
     help_ = "Max pages"
     parser.add_argument("-m", "--max_pages", help=help_, default=15, type=int)
 
+    help_ = "Loosen search criteria, query text doesn't have to be in abstract"
+    parser.add_argument("-l", "--loose_query", help=help_, action='store_true')
+
     help_ = "Sort based on (score, citation_count, year, bibcode)"
     parser.add_argument("-o", "--sort", help=help_, default="score", type=str)
 
@@ -67,8 +70,8 @@ if __name__ == '__main__':
         if data['abstract'] is None:
             continue
 
-        # check if query is in abstract or title
-        if args.query not in data['abstract']:
+        # check for query text in abstract
+        if not args.loose_query and args.query.lower() not in data['abstract'].lower():
             continue
 
         # check that value doesn't exist
