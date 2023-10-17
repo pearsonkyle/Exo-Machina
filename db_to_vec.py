@@ -1,5 +1,3 @@
-import os
-import json
 import string
 import argparse
 import pickle
@@ -31,6 +29,10 @@ def parse_args():
 
     help_ = "Settings file"
     parser.add_argument("-s", "--settings", help=help_, default="settings.json", type=str)
+
+    # embedding type, classic or ai
+    help_ = "Embedding type"
+    parser.add_argument("-e", "--embedding", help=help_, default="classic", type=str)
 
     return parser.parse_args()
 
@@ -83,6 +85,7 @@ if __name__ == '__main__':
     # read in text column and avoid reprocessing
     processed_abstracts = [entry.abstract_processed for entry in entrys]
 
+    # TODO change embedding type
     # TODO check processed_abstracts individually
 
     # check if text column is empty
@@ -119,7 +122,7 @@ if __name__ == '__main__':
 
     # ranks words by importance/occurence
     # The maximum number of features will be the maximum number of unique words
-    vectorizer = TfidfVectorizer(max_features=2**13) # too few features and brain coral talk on mars gets correlated with ocean coral talk on earth
+    vectorizer = TfidfVectorizer(max_features=2**14) # too few features and brain coral talk on mars gets correlated with ocean coral talk on earth
     X = vectorizer.fit_transform(processed_abstracts) 
     pickle.dump(vectorizer, open("vectorizer.pkl", "wb"))
 
@@ -141,6 +144,8 @@ if __name__ == '__main__':
 
     # compare shapes
     print("after pca:",X_reduced.shape)
+
+    # TODO save embeddings to database
 
     # build nearest neighbor index
     t = AnnoyIndex(X_reduced.shape[1], 'angular')

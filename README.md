@@ -1,4 +1,5 @@
-A semantic search engine for manuscript on the ArXiv. Semantic search means that the search engine will understand the meaning of the query and return results that are semantically similar to the query. This is in contrast to a keyword search engine which will return results that contain the exact keywords in the query. This search engine uses a language model to generate embeddings for each manuscript which can be clustered for visualization applications and queried for entity searches. The embeddings are generated using tfidf+PCA, SciBERT, and GPT-2. The embeddings are then clustered using an approximate nearest neighbor technique (ANNOY) and queried with FAISS to provide recommendations on similar articles to an input prompt. The language model is trained on ~2.1M abstracts from the ArXiv.
+
+A semantic search engine for white papers on the [ArXiv](https://arxiv.org/) and [NASA ADS](https://ui.adsabs.harvard.edu/). Semantic search uses different techniques to understand the intent and context of search terms. This means that the search engine will understand the meaning of the query beyond just the exact keywords. The search engine uses a language model to generate embeddings for each manuscript which can be clustered for visualization applications and queried for entity searches. The embeddings are generated using [tfidf](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html)+PCA and a Llama2-based fine tuned model. The embeddings are then clustered using an approximate nearest neighbor technique (ANNOY) or queried with FAISS to provide recommendations on similar articles.
 
 ## Dependencies
 
@@ -39,21 +40,7 @@ These data are added to a SQL database called `whitepapers.db` which can be sort
 
     `python db_to_vec.py`
 
-    We use two different algorithms to generate embeddings, the first is a TF-IDF vectorizer with PCA dimensionality reduction and the second is a language model, SciBERT, which is a BERT model trained on scientific text. The embeddings are then clustered using an approximate nearest neighbor technique (ANNOY) and queried with FAISS to provide recommendations on similar articles to an input prompt.
-
-## Embeddings
-
-A language model is used to generate encodings for each manuscript which can be clustered for visualization applications and queried for entity searches. The embeddings are generated from the [SciBERT](https://github.com/allenai/scibert) model. The embeddings are then clustered using an approximate nearest neighbor technique (ANNOY) and queried with FAISS to provide recommendations on similar articles to an input prompt.
-
-1. `python db2embedding.py` to use create a vector for each abstract in db using an embedding from the [SciBERT](https://huggingface.co/allenai/scibert_scivocab_uncased) model.
-2. `python db2annoy.py` to create an [approximate nearest neighbor](https://github.com/spotify/annoy) tree
-3. `python eval_nearest.py` 
-
-or 
-
-1. `python text_to_vec.py` to create vectors based on TF-IDF and PCA
-2. `python eval_tfidf.py`
-
+    We use two different algorithms to generate embeddings, the first is a TF-IDF vectorizer with PCA dimensionality reduction and the second is a fine-tuned language model, [llama2](https://huggingface.co/TheBloke/Speechless-Llama2-Hermes-Orca-Platypus-WizardLM-13B-GGUF). The embeddings are then clustered using an approximate nearest neighbor technique (ANNOY) and queried with FAISS to provide recommendations on similar articles to an input prompt.
 
 ## RESTful API
 
