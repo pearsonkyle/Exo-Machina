@@ -96,7 +96,7 @@ prompt-toolkit==3.0.39
 psutil==5.9.5
 ptyprocess==0.7.0
 pure-eval==0.2.2
-pyarrow==13.0.0
+pyarrow==14.0.1
 pycparser==2.21
 pydantic @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_f5e9j7terp/croot/pydantic_1695798853988/work
 Pygments @ file:///home/conda/feedstock_root/build_artifacts/pygments_1691408637400/work
