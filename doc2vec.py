@@ -181,7 +181,7 @@ class NoProcesor():
 
 class TextEncoder():
     def __init__(self, text_preprocessing='spacy', text_encoding='tfidf', encode_size='4K', 
-                 vector_preprocessing='standard', dim_reduction='PCA', dim_reduction_components=2):
+                 vector_preprocessing='standard', dim_reduction='PCA', dim_reduction_components=2, **kwargs):
         """
         A class for embedding documents into vectors. The pipeline includes
         text preprocessing, embedding, vector preprocessing, and dimensionality reduction.
@@ -201,6 +201,8 @@ class TextEncoder():
             Dimensionality reduction method, one of 'pca' or 'lda'
         dim_reduction_components : int
             Number of components for dimensionality reduction (2, 3, 4, 5, 10, 25, 50, 100)
+        kwargs : dict
+            Additional arguments to pass to sklearn classes (data_dir)
         """
 
         # Vector preprocessing
@@ -262,15 +264,19 @@ class TextEncoder():
         # select algorithm
         if dim_reduction is None:
             self.dim_reduction = NoProcesor()
-        elif dim_reduction == 'pca':
+        elif dim_reduction.lower() == 'pca':
             self.dim_reduction = PCA(n_components=dim_reduction_components)
-        elif dim_reduction == 'lda':
+            print('PCA components:', dim_reduction_components)
+        elif dim_reduction.lower() == 'lda':
             self.dim_reduction = LDA(n_components=dim_reduction_components)
+            print('LDA components:', dim_reduction_components)
         else:
             # default to none
             print('Invalid dimensionality reduction method. Defaulting to none.')
             self.dim_reduction = NoProcesor()
     
+        self.name = f"doc2vec_{text_preprocessing}_{text_encoding}_{encode_size}_{vector_preprocessing}_{dim_reduction}_{dim_reduction_components}"
+
     def fit_transform(self, docs, y=None):
         """
         Fit the model with X and apply the dimensionality reduction to X.
@@ -336,7 +342,7 @@ class TextEncoder():
     def __call__(self, X):
         return self.transform(X)
     
-    def score(self, X, y):
+    def score(self, X, y, save=False):
         """
         Score the embeddings using various clustering metrics
 
@@ -347,6 +353,9 @@ class TextEncoder():
 
         y : array-like of shape (n_samples,)
 
+        save : bool
+            Save scores to json file
+
         Returns
         -------
         score : dict
@@ -355,12 +364,19 @@ class TextEncoder():
             Davies-Bouldin score (lower is better)
             Calinski-Harabasz score (higher is better)
         """
-        # TODO add more metrics
-        return {
+        scores = {
             'silhouette': silhouette_score(X, y),
             'davies_bouldin': davies_bouldin_score(X, y),
             'calinski_harabasz': calinski_harabasz_score(X, y)
         }
+        
+        if save:
+            fname = f"{self.name}.json"
+            with open(fname, 'w') as f:
+                json.dump(scores, f)
+            print(f'Saved scores to {fname}')
+
+        return scores
 
 
 def parse_args():
@@ -378,6 +394,8 @@ def parse_args():
                         help='Dimensionality reduction method, one of "pca" or "lda"')
     parser.add_argument('--dim_reduction_components', type=float, default=0.5,
                         help='Number of components for dimensionality reduction (if <1 will be fraction of max_features)')
+    parser.add_argument('--data_dir', type=str, default='markdown',
+                        help='Directory of markdown files')
     args = parser.parse_args()
     return args
 
@@ -387,7 +405,7 @@ if __name__ == '__main__':
     args = parse_args()
     
     # get all markdown files
-    markdown_files = glob.glob('markdown/*.md')
+    markdown_files = glob.glob(os.path.join(args.data_dir, '*.md'))
 
     # separate file names into category labels
     # example: cat1-01.md cat1-02.md cat2-01.md cat2-02.md cat3-01.md cat4-01.md
@@ -412,18 +430,36 @@ if __name__ == '__main__':
     #doc2vec = TextEncoder(text_preprocessing='spacy', text_encoding='tfidf', encode_size='4K', 
     #                      vector_preprocessing='standard', dim_reduction='PCA', dim_reduction_components=0.5)
     doc2vec = TextEncoder(**vars(args))
-    
+
     # create text embeddings
     X = doc2vec.fit_transform(processed_text)
-    scores = doc2vec.score(X, y)
-
+    scores = doc2vec.score(X, y, save=True)
     print('Document scores:')
     print(scores)
 
-    # save scores to json
-    fname = f"doc2vec_{args.text_preprocessing}_{args.text_encoding}_{args.encode_size}_{args.vector_preprocessing}_{args.dim_reduction}_{args.dim_reduction_components}.json"
-    with open(fname, 'w') as f:
-        json.dump(scores, f)
+    # create grid of parameters
+    pars ={
+        'text_preprocessing': ['spacy', 'none'],
+        'text_encoding': ['tfidf', 'bow'],
+        'encode_size': ['4K', '8K', '16K'],
+        'vector_preprocessing': ['standard', 'normalize', 'none'],
+        'dim_reduction': ['PCA', 'LDA'],
+        'dim_reduction_components': [0.5, 0.25, 2, 50]
+    }
+
+    # create all combinations of parameters
+    import itertools
+    keys, values = zip(*pars.items())
+    combinations = [dict(zip(keys, v)) for v in itertools.product(*values)]
+    print('Total combinations:', len(combinations))
+
+    # create a scores for each combination
+    for i in range(len(combinations)):
+        doc2vec = TextEncoder(**combinations[i])
+        X = doc2vec.fit_transform(processed_text)
+        scores = doc2vec.score(X, y, save=True)
+        print('Document scores:')
+        print(scores)
 
     # create some random data to score
     # Xr = np.random.random(X.shape)
