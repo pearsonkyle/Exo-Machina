@@ -1,9 +1,13 @@
 import re
+import os
+import glob
+import json
 import types
 import spacy
 import string
 import mammoth
 import markdown
+import argparse
 import numpy as np
 from tqdm import tqdm
 from bs4 import BeautifulSoup
@@ -359,10 +363,28 @@ class TextEncoder():
         }
 
 
+def parse_args():
+    # args for text encoding
+    parser = argparse.ArgumentParser(description='Text Encoding Arguments')
+    parser.add_argument('--text_preprocessing', type=str, default='spacy',
+                        help='Text preprocessing method, one of "spacy" or "none"/None')
+    parser.add_argument('--text_encoding', type=str, default='tfidf',
+                        help='Text encoding method, one of "tfidf", "bow", or "llm"')
+    parser.add_argument('--encode_size', type=str, default='4K',
+                        help='Vocabulary size for text encoding using tfidf or bag of words (4K, 8K or 16K)')
+    parser.add_argument('--vector_preprocessing', type=str, default='standard',
+                        help='Vector preprocessing method, one of "standard", "normalize" or "none"/None')
+    parser.add_argument('--dim_reduction', type=str, default='PCA',
+                        help='Dimensionality reduction method, one of "pca" or "lda"')
+    parser.add_argument('--dim_reduction_components', type=float, default=0.5,
+                        help='Number of components for dimensionality reduction (if <1 will be fraction of max_features)')
+    args = parser.parse_args()
+    return args
+
 # create test in main block of code to read markdown files from directory and convert to text then embed
 if __name__ == '__main__':
-    import glob
-    import os
+
+    args = parse_args()
     
     # get all markdown files
     markdown_files = glob.glob('markdown/*.md')
@@ -386,20 +408,25 @@ if __name__ == '__main__':
         with open(markdown_files[i], 'r') as f:
             processed_text.append(markdown_to_text(f.read()))
 
-    # embed text
-    doc2vec = TextEncoder(text_preprocessing='spacy', text_encoding='tfidf', encode_size='4K', 
-                          vector_preprocessing='standard', dim_reduction='PCA', dim_reduction_components=0.5)
+    # set up encoder
+    #doc2vec = TextEncoder(text_preprocessing='spacy', text_encoding='tfidf', encode_size='4K', 
+    #                      vector_preprocessing='standard', dim_reduction='PCA', dim_reduction_components=0.5)
+    doc2vec = TextEncoder(**vars(args))
+    
+    # create text embeddings
     X = doc2vec.fit_transform(processed_text)
+    scores = doc2vec.score(X, y)
 
-    # print cluster scores
     print('Document scores:')
-    print(doc2vec.score(X, y))
+    print(scores)
+
+    # save scores to json
+    fname = f"doc2vec_{args.text_preprocessing}_{args.text_encoding}_{args.encode_size}_{args.vector_preprocessing}_{args.dim_reduction}_{args.dim_reduction_components}.json"
+    with open(fname, 'w') as f:
+        json.dump(scores, f)
 
     # create some random data to score
-    Xr = np.random.random(X.shape)
-    yr = np.random.randint(0, len(category_labels), X.shape[0])
-    print('Random data scores:')
-    print(doc2vec.score(Xr, yr))
-
-    # if I want to test different parameters
-    # preprocess with spacy before embedding and set text_preprocessing=None
+    # Xr = np.random.random(X.shape)
+    # yr = np.random.randint(0, len(category_labels), X.shape[0])
+    # print('Random data scores:')
+    # print(doc2vec.score(Xr, yr))
