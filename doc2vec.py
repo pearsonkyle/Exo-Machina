@@ -4,18 +4,25 @@ import glob
 import json
 import types
 import spacy
+import torch
 import string
+import hashlib
 import mammoth
 import markdown
 import argparse
 import numpy as np
 from tqdm import tqdm
 from bs4 import BeautifulSoup
+import torch.nn.functional as F
+from transformers import AutoTokenizer, AutoModel
 from spacy.lang.en.stop_words import STOP_WORDS
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
+
+# torch device: cuda, mps, cpu
+device = "mps"
 
 # use tokenizer from spacy trained on sci corpus
 parser = spacy.load("en_core_web_trf",disable=["ner"])
@@ -153,16 +160,70 @@ def docx_to_text(file_path, output_path=None):
 # Calinski-Harabasz score (higher is better)
 # Avg. cosine similarity of categories (higher is better)
 
-class LlamaEncoder():
-    def __init__(self):
+
+
+# Mean Pooling - Take attention mask into account for correct averaging
+# https://huggingface.co/sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+def mean_pooling(model_output, attention_mask):
+    token_embeddings = model_output[0] #First element of model_output contains all token embeddings
+    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+    return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+
+
+class HuggingFaceEncoder():
+    def __init__(self, name='sentence-transformers/all-mpnet-base-v2'):
         """
-        A class for encoding text using the llama2 encoder. TODO
+        A class for encoding text using hugging face models.
+
+        Parameters
+        ----------
+        name : str
+            Name of hugging face model
+            e.g. HuggingFaceH4/zephyr-7b-beta
         """
-        pass
+        self.tokenizer = AutoTokenizer.from_pretrained(name)
+        self.model = AutoModel.from_pretrained(name).to(device)
+        self.name = name
 
     def fit_transform(self, X, y=None):
-        return X
+        """
+        Fit the model with X and apply the dimensionality reduction to X.
 
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data
+
+        y : None
+            Ignored
+
+        Returns
+        -------
+        X_new : array-like of shape (n_samples, n_components)
+            Transformed array
+        """
+
+        if "sentence-transformers" in self.name:
+
+            # Tokenize sentences
+            encoded_input = self.tokenizer(X, padding=True, truncation=True, return_tensors='pt').to(device)
+
+            # Compute token embeddings
+            with torch.no_grad():
+                model_output = self.model(**encoded_input)
+
+            # Perform pooling
+            embeddings = mean_pooling(model_output, encoded_input['attention_mask'])
+
+            # Normalize embeddings
+            embeddings = F.normalize(embeddings, p=2, dim=1)
+
+        else:
+            encoded_input = self.tokenizer(X, return_tensors='pt', padding=True, truncation=True).to(device)
+            embeddings = self.model(**encoded_input).pooler_output
+
+        return embeddings.cpu().detach().numpy()
+        
 class NoProcesor():
     def __init__(self):
         """
@@ -180,8 +241,9 @@ class NoProcesor():
         return self
 
 class TextEncoder():
-    def __init__(self, text_preprocessing='spacy', text_encoding='tfidf', encode_size='4K', 
-                 vector_preprocessing='standard', dim_reduction='PCA', dim_reduction_components=2, **kwargs):
+    def __init__(self, chunking='sentence', text_preprocessing='spacy', 
+                 text_encoding='tfidf', encode_size='4K', vector_preprocessing='standard',
+                 dim_reduction='PCA', dim_reduction_components=2, **kwargs):
         """
         A class for embedding documents into vectors. The pipeline includes
         text preprocessing, embedding, vector preprocessing, and dimensionality reduction.
@@ -189,6 +251,8 @@ class TextEncoder():
 
         Parameters
         ----------
+        chunking : str
+            Chunking method, one of 'sentence', 'newline', 'none', or int (number of words per chunk)
         text_preprocessing : str
             Text preprocessing method, one of 'spacy' or 'none'/None
         text_encoding : str
@@ -204,6 +268,21 @@ class TextEncoder():
         kwargs : dict
             Additional arguments to pass to sklearn classes (data_dir)
         """
+
+        # Chunking
+        if chunking == 'sentence':
+            self.chunk_preprocessing = lambda x: [str(s) for s in parser(x).sents]
+        elif chunking == 'newline':
+            self.chunk_preprocessing = lambda x: x.split('\n')
+        elif chunking == 'none':
+            self.chunk_preprocessing = lambda x: [x]
+        elif isinstance(chunking, int):
+            # chunk with 50% overlap
+            self.chunk_preprocessing = lambda x: [x[i:i+chunking] for i in range(0, len(x), chunking//2)]
+        else:
+            # default to sentence
+            print('Invalid chunking method. Defaulting to none.')
+            self.chunk_preprocessing = lambda x: [x]
 
         # Vector preprocessing
         if text_preprocessing is None:
@@ -237,26 +316,36 @@ class TextEncoder():
         elif text_encoding == 'bow':
             self.text_encoding = CountVectorizer(max_features=max_features)
         elif text_encoding == 'llm':
-            # TODO load llama weights
-            self.text_encoding = LlamaEncoder()
+            self.text_encoding = HuggingFaceEncoder()
+            encode_size = self.text_encoding.model.config.hidden_size
+        elif '/' in text_encoding: # custom hugging face model
+            self.text_encoding = HuggingFaceEncoder(name=text_encoding)
+            encode_size = self.text_encoding.model.config.hidden_size
         else:
             # default to tfidf
             print('Invalid text encoding method. Defaulting to tfidf.')
             self.text_encoding = TfidfVectorizer(max_features=max_features)
 
-        # Vector preprocessing
-        if vector_preprocessing is None:
-            self.vector_preprocessing = lambda x: x
-        elif vector_preprocessing == 'standard': # standard scaler
-            self.vector_preprocessing = lambda x: (x - np.mean(x, axis=0)) / np.std(x, axis=0)
-        elif vector_preprocessing == 'normalize': # normalize
-            self.vector_preprocessing = lambda x: x / np.linalg.norm(x, axis=0)
-        elif vector_preprocessing == 'none':
-            self.vector_preprocessing = lambda x: x
+        # Vector preprocessing only for tfidf and bow
+        if text_encoding.__class__.__name__ == 'TfidfVectorizer' or \
+            text_encoding.__class__.__name__ == 'CountVectorizer':
+            if vector_preprocessing is None:
+                self.vector_preprocessing = lambda x: x
+            elif vector_preprocessing == 'standard': # standard scaler
+                self.vector_preprocessing = lambda x: (x - np.mean(x, axis=0)) / np.std(x, axis=0)
+            elif vector_preprocessing == 'normalize': # normalize
+                self.vector_preprocessing = lambda x: x / np.linalg.norm(x, axis=0)
+            elif vector_preprocessing == 'none':
+                self.vector_preprocessing = lambda x: x
+            else:
+                # default to none
+                print('Invalid vector preprocessing method. Defaulting to none.')
+                self.vector_preprocessing = lambda x: x
         else:
-            # default to none
-            print('Invalid vector preprocessing method. Defaulting to none.')
+            # no vector preprocessing for llm
             self.vector_preprocessing = lambda x: x
+            vector_preprocessing = 'none'
+
 
         # Dimensionality reduction
         if dim_reduction_components < 1: # fraction of max_features
@@ -274,8 +363,20 @@ class TextEncoder():
             # default to none
             print('Invalid dimensionality reduction method. Defaulting to none.')
             self.dim_reduction = NoProcesor()
-    
-        self.name = f"doc2vec_{text_preprocessing}_{text_encoding}_{encode_size}_{vector_preprocessing}_{dim_reduction}_{dim_reduction_components}"
+
+        self.settings = {
+            'chunking': chunking,
+            'text_preprocessing': text_preprocessing,
+            'text_encoding': text_encoding,
+            'encode_size': encode_size,
+            'vector_preprocessing': vector_preprocessing,
+            'dim_reduction': dim_reduction,
+            'dim_reduction_components': dim_reduction_components
+        }
+
+        # name is md5 hash of settings
+        self.name = hashlib.md5(json.dumps(self.settings, sort_keys=True).encode('utf-8')).hexdigest()
+
 
     def fit_transform(self, docs, y=None):
         """
@@ -295,29 +396,41 @@ class TextEncoder():
             Transformed array
         """
 
-        print('Preprocessing text...')
         processed_docs = []
-        for i in tqdm(range(len(docs))):
-            processed_docs.append(self.text_preprocessing(docs[i]))
+        processed_y = []
+
+        print('Chunking text...')
+        for i in range(len(docs)):
+            chunked = self.chunk_preprocessing(docs[i])
+            processed_docs.extend(chunked)
+            # repeat labels for each chunk
+            processed_y.extend([y[i]] * len(chunked))
+
+        print('Preprocessing text...')
+        for i in tqdm(range(len(processed_docs))):
+            processed_docs[i] = self.text_preprocessing(processed_docs[i])
 
         print('Encoding text...')
         X = self.text_encoding.fit_transform(processed_docs)
         print('Encoding shape:', X.shape)
 
         print('Preprocessing vectors...')
-        X = self.vector_preprocessing(X.toarray())
+        if self.text_encoding.__class__.__name__ == 'TfidfVectorizer':
+            X = self.vector_preprocessing(X.toarray())
+        else:
+            X = self.vector_preprocessing(X) # llm usually ~(N, 768)
         print('Vector shape:', X.shape)
 
         print('Reducing dimensionality...')
-        if y is not None:
+        if y is not None and self.dim_reduction.__class__.__name__ == 'LDA':
             X = self.dim_reduction.fit_transform(X, y)
         else:
             X = self.dim_reduction.fit_transform(X)
 
         print('Reduced shape:', X.shape)
-        return X
+        return X, np.array(processed_y)
 
-    def transform(self, X):
+    def transform(self, X, y=None):
         """
         Convert documents to vectors using the fitted model.
 
@@ -331,17 +444,34 @@ class TextEncoder():
         X_new : array-like of shape (n_samples, n_components)
             Transformed array
         """
-        if isinstance(X, str):
-            X = [X]
-        preprocessed_text = self.text_preprocessing(X)
-        X = self.text_encoding.transform([preprocessed_text])
-        X = self.vector_preprocessing(X.toarray())
-        X = self.dim_reduction.transform(X)
-        return X
+        processed_text = []
+        processed_y = []
 
-    def __call__(self, X):
-        return self.transform(X)
-    
+        # chunk text
+        for i in range(len(X)):
+            chunked = self.chunk_preprocessing(X[i])
+            processed_text.extend(chunked)
+            # repeat labels for each chunk
+            processed_y.extend([y[i]] * len(chunked))
+
+        # preprocess text
+        for i in tqdm(range(len(processed_text))):
+            processed_text[i] = self.text_preprocessing(processed_text[i])
+
+        # encode text
+        X = self.text_encoding.transform(processed_text)
+
+        # preprocess vectors
+        X = self.vector_preprocessing(X.toarray())
+
+        # reduce dimensionality
+        if y is not None and self.dim_reduction.__class__.__name__ == 'LDA':
+            X = self.dim_reduction.transform(X, y)
+        else:
+            X = self.dim_reduction.transform(X)
+        
+        return X, processed_y
+
     def score(self, X, y, save=False):
         """
         Score the embeddings using various clustering metrics
@@ -369,11 +499,24 @@ class TextEncoder():
             'davies_bouldin': davies_bouldin_score(X, y),
             'calinski_harabasz': calinski_harabasz_score(X, y)
         }
+
+        # cosine similarity of matrix
+        #cosine_similarity = np.dot(X, X.T) / np.linalg.norm(X, axis=1) / np.linalg.norm(X, axis=1)[:, np.newaxis]
         
+        # average cosine similarity of each category
+        #for i in range(len(np.unique(y))):
+        #    scores[f'cosine_similarity_{i}'] = np.mean(cosine_similarity[y == i, :][:, y == i])
+
+        # convert each to float for json serialization
+        for key in scores.keys():
+            scores[key] = float(scores[key])
+
         if save:
             fname = f"{self.name}.json"
+            # add scores to settings
+            self.settings['scores'] = scores
             with open(fname, 'w') as f:
-                json.dump(scores, f)
+                json.dump(self.settings, f)
             print(f'Saved scores to {fname}')
 
         return scores
@@ -382,17 +525,19 @@ class TextEncoder():
 def parse_args():
     # args for text encoding
     parser = argparse.ArgumentParser(description='Text Encoding Arguments')
+    parser.add_argument('--chunking', type=str, default='sentence',
+                        help='Chunking method, one of "sentence", "newline", "none", or int (number of words per chunk)')
     parser.add_argument('--text_preprocessing', type=str, default='spacy',
                         help='Text preprocessing method, one of "spacy" or "none"/None')
-    parser.add_argument('--text_encoding', type=str, default='tfidf',
-                        help='Text encoding method, one of "tfidf", "bow", or "llm"')
+    parser.add_argument('--text_encoding', type=str, default='llm',
+                        help='Text encoding method, one of "tfidf", "bow", "llm" or hugging face model name')
     parser.add_argument('--encode_size', type=str, default='4K',
                         help='Vocabulary size for text encoding using tfidf or bag of words (4K, 8K or 16K)')
     parser.add_argument('--vector_preprocessing', type=str, default='standard',
                         help='Vector preprocessing method, one of "standard", "normalize" or "none"/None')
     parser.add_argument('--dim_reduction', type=str, default='PCA',
                         help='Dimensionality reduction method, one of "pca" or "lda"')
-    parser.add_argument('--dim_reduction_components', type=float, default=0.5,
+    parser.add_argument('--dim_reduction_components', type=float, default=32,
                         help='Number of components for dimensionality reduction (if <1 will be fraction of max_features)')
     parser.add_argument('--data_dir', type=str, default='markdown',
                         help='Directory of markdown files')
@@ -416,9 +561,9 @@ if __name__ == '__main__':
     # convert to integer labels, y
     category = np.array(category)
     category_labels = np.unique(category)
-    y = np.zeros(len(category))
+    labels = np.zeros(len(category))
     for i in range(len(category_labels)):
-        y[category == category_labels[i]] = i
+        labels[category == category_labels[i]] = i
 
     # convert to text
     processed_text = []
@@ -432,20 +577,28 @@ if __name__ == '__main__':
     doc2vec = TextEncoder(**vars(args))
 
     # create text embeddings
-    X = doc2vec.fit_transform(processed_text)
+    X,y = doc2vec.fit_transform(processed_text, labels)
     scores = doc2vec.score(X, y, save=True)
     print('Document scores:')
     print(scores)
 
+    dude()
+
     # create grid of parameters
     pars ={
+        'chunking': ['sentence', 'newline', 'none', 200, 500],
         'text_preprocessing': ['spacy', 'none'],
-        'text_encoding': ['tfidf', 'bow'],
+        'text_encoding': ['tfidf', 'bow', 'llm', 
+                          'sentence-transformers/all-mpnet-base-v2',
+                          'sentence-transformers/all-MiniLM-L12-v2',
+                          'sentence-transformers/msmarco-MiniLM-L12-cos-v5'],
         'encode_size': ['4K', '8K', '16K'],
         'vector_preprocessing': ['standard', 'normalize', 'none'],
-        'dim_reduction': ['PCA', 'LDA'],
-        'dim_reduction_components': [0.5, 0.25, 2, 50]
+        'dim_reduction': ['PCA', 'LDA', 'none'],
+        'dim_reduction_components': [2, 64, 128, 512],
     }
+
+    # compute some sort of document-document similarity matrix
 
     # create all combinations of parameters
     import itertools
@@ -456,7 +609,7 @@ if __name__ == '__main__':
     # create a scores for each combination
     for i in range(len(combinations)):
         doc2vec = TextEncoder(**combinations[i])
-        X = doc2vec.fit_transform(processed_text)
+        X = doc2vec.fit_transform(processed_text, y)
         scores = doc2vec.score(X, y, save=True)
         print('Document scores:')
         print(scores)
@@ -466,3 +619,32 @@ if __name__ == '__main__':
     # yr = np.random.randint(0, len(category_labels), X.shape[0])
     # print('Random data scores:')
     # print(doc2vec.score(Xr, yr))
+
+    """
+    From https://huggingface.co/sentence-transformers/msmarco-MiniLM-L12-cos-v5
+
+    # Sentences we want sentence embeddings for
+    query = "How many people live in London?"
+    docs = ["Around 9 Million people live in London", "London is known for its financial district"]
+
+    # Load model from HuggingFace Hub
+    tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/msmarco-MiniLM-L12-cos-v5")
+    model = AutoModel.from_pretrained("sentence-transformers/msmarco-MiniLM-L12-cos-v5")
+
+    #Encode query and docs
+    query_emb = encode(query)
+    doc_emb = encode(docs)
+
+    #Compute dot score between query and all document embeddings
+    scores = torch.mm(query_emb, doc_emb.transpose(0, 1))[0].cpu().tolist()
+
+    #Combine docs & scores
+    doc_score_pairs = list(zip(docs, scores))
+
+    #Sort by decreasing score
+    doc_score_pairs = sorted(doc_score_pairs, key=lambda x: x[1], reverse=True)
+
+    #Output passages & scores
+    for doc, score in doc_score_pairs:
+        print(score, doc)
+    """
